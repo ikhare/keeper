@@ -8,30 +8,33 @@ import {
   useQuery,
 } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Code } from "@/components/typography/code";
-import { Link } from "@/components/typography/link";
 import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { StickyHeader } from "@/components/layout/sticky-header";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   return (
     <>
       <StickyHeader className="px-4 py-2">
         <div className="flex justify-between items-center">
-          Convex + Next.js + Clerk
+          <span className="font-semibold">Todo & Notes App</span>
           <SignInAndSignUpButtons />
         </div>
       </StickyHeader>
-      <main className="container max-w-2xl flex flex-col gap-8">
-        <h1 className="text-4xl font-extrabold my-8 text-center">
-          Convex + Next.js + Clerk Auth
-        </h1>
+      <main className="container max-w-4xl flex flex-col gap-8 p-4">
         <Authenticated>
           <SignedInContent />
         </Authenticated>
         <Unauthenticated>
-          <p>Click one of the buttons in the top right corner to sign in.</p>
+          <div className="text-center mt-20">
+            <h2 className="text-2xl font-bold mb-4">Welcome to Todo & Notes</h2>
+            <p className="mb-4">
+              Please sign in to manage your todos and notes.
+            </p>
+          </div>
         </Unauthenticated>
       </main>
     </>
@@ -57,62 +60,48 @@ function SignInAndSignUpButtons() {
 }
 
 function SignedInContent() {
-  const { viewer, numbers } =
-    useQuery(api.myFunctions.listNumbers, {
-      count: 10,
-    }) ?? {};
-  const addNumber = useMutation(api.myFunctions.addNumber);
-
-  if (viewer === undefined || numbers === undefined) {
-    return (
-      <>
-        <Skeleton className="h-5 w-full" />
-        <Skeleton className="h-5 w-full" />
-        <Skeleton className="h-5 w-full" />
-      </>
-    );
-  }
-
   return (
-    <>
-      <p>Welcome {viewer ?? "N/A"}!</p>
-      <p>
-        Click the button below and open this page in another window - this data
-        is persisted in the Convex cloud database!
-      </p>
-      <p>
-        <Button
-          onClick={() => {
-            void addNumber({ value: Math.floor(Math.random() * 10) });
-          }}
-        >
-          Add a random number
-        </Button>
-      </p>
-      <p>
-        Numbers:{" "}
-        {numbers?.length === 0
-          ? "Click the button!"
-          : numbers?.join(", ") ?? "..."}
-      </p>
-      <p>
-        Edit <Code>convex/myFunctions.ts</Code> to change your backend
-      </p>
-      <p>
-        Edit <Code>app/page.tsx</Code> to change your frontend
-      </p>
-      <p>
-        Check out{" "}
-        <Link target="_blank" href="https://docs.convex.dev/home">
-          Convex docs
-        </Link>
-      </p>
-      <p>
-        To build a full page layout copy one of the included{" "}
-        <Link target="_blank" href="/layouts">
-          layouts
-        </Link>
-      </p>
-    </>
+    <div className="space-y-8">
+      {/* Todos Section */}
+      <section className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-2xl font-bold mb-4">Todos</h2>
+        <div className="space-y-4">
+          {[1, 2, 3].map((todo) => (
+            <div key={todo} className="flex items-center gap-3">
+              <Checkbox />
+              <div className="flex-1">
+                <span>My first todo</span>
+                <span className="ml-2 text-sm text-gray-500">due tomorrow</span>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="secondary">Tag 1</Badge>
+                <Badge variant="secondary">Tag 2</Badge>
+              </div>
+            </div>
+          ))}
+          <div className="flex gap-2 mt-4">
+            <Input placeholder="Add new todo..." className="flex-1" />
+            <Button>Add</Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Notes Section */}
+      <section className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-2xl font-bold mb-4">Notes</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="border rounded-lg p-4">
+            <Input placeholder="Note title" className="mb-2" />
+            <Textarea placeholder="Note content" className="min-h-[100px]" />
+          </div>
+          {[1, 2, 3].map((note) => (
+            <div key={note} className="border rounded-lg p-4">
+              <h3 className="font-semibold mb-2">Note title</h3>
+              <p className="text-gray-600">Note body text</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
