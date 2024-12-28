@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Badge } from "@/components/ui/badge";
+import { TagPicker } from "@/app/components/tag-picker";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
@@ -36,6 +38,7 @@ export function TodosAndNotes() {
   const todos = useQuery(api.items.listTodos);
   const createItem = useMutation(api.items.create);
   const [newTodoTitle, setNewTodoTitle] = useState("");
+  const [selectedTags, setSelectedTags] = useState<Id<"tags">[]>([]);
 
   const handleCreateTodo = async () => {
     if (!newTodoTitle.trim()) return;
@@ -43,8 +46,10 @@ export function TodosAndNotes() {
       title: newTodoTitle,
       note: "",
       dueDate: Date.now() + 24 * 60 * 60 * 1000, // Tomorrow
+      tagIds: selectedTags,
     });
     setNewTodoTitle("");
+    setSelectedTags([]);
   };
 
   // const handleCreateNote = async () => {
@@ -88,17 +93,17 @@ export function TodosAndNotes() {
                   due {new Date(todo.dueDate!).toLocaleDateString()}
                 </span>
               </div>
-              {/* <div className="flex gap-2">
-                {todo.tags?.map((tag) => (
+              <div className="flex gap-2">
+                {todo.tags.map((tag) => (
                   <Badge
-                    key={tag?._id}
+                    key={tag._id}
                     variant="secondary"
                     className="bg-[#F7E6D3] text-[#23325A]"
                   >
-                    {tag?.name}
+                    {tag.name}
                   </Badge>
                 ))}
-              </div> */}
+              </div>
             </div>
           ))}
           <div className="flex gap-2 mt-4">
@@ -116,6 +121,9 @@ export function TodosAndNotes() {
               Add
             </Button>
           </div>
+          <TagPicker
+            onTagsChange={setSelectedTags}
+          />
         </div>
       </section>
 

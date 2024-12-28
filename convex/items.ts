@@ -22,34 +22,21 @@ export const listTodos = query({
       .filter((q) => q.neq(q.field("dueDate"), undefined))
       .collect();
 
-    // Get all tags for these items
-    const itemTags = await Promise.all(
-      todos.map((todo) =>
-        ctx.db
+    // Return todos with their tags
+    return await Promise.all(
+      todos.map(async (todo) => {
+        const itemTags = await ctx.db
           .query("itemTags")
           .withIndex("by_item", (q) => q.eq("itemId", todo._id))
-          .collect()
-      )
-    ).then((results) => results.flat());
+          .collect();
 
-    // Get all tag details
-    const tagIds = new Set(itemTags.map((it) => it.tagId));
-    const tags = await Promise.all(
-      [...tagIds].map((tagId) => ctx.db.get(tagId))
-    ).then((tags) => tags.filter(Boolean));
+        const tags = (
+          await Promise.all(itemTags.map((it) => ctx.db.get(it.tagId)))
+        ).filter((tag) => tag !== null);
 
-    // Return todos with their tags
-    const todosWithTags = todos.map((todo) => ({
-      ...todo,
-      tags: itemTags
-        .filter((it) => it.itemId === todo._id)
-        .map((it) => tags.find((t) => t?._id === it.tagId))
-        .filter(Boolean),
-    }));
-
-    console.log(todosWithTags);
-
-    return todosWithTags;
+        return { ...todo, tags: tags.filter(Boolean) };
+      })
+    );
   },
 });
 
