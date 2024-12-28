@@ -39,13 +39,17 @@ export const listTodos = query({
     ).then((tags) => tags.filter(Boolean));
 
     // Return todos with their tags
-    return todos.map((todo) => ({
+    const todosWithTags = todos.map((todo) => ({
       ...todo,
       tags: itemTags
         .filter((it) => it.itemId === todo._id)
         .map((it) => tags.find((t) => t?._id === it.tagId))
         .filter(Boolean),
     }));
+
+    console.log(todosWithTags);
+
+    return todosWithTags;
   },
 });
 
