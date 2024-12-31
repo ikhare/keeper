@@ -8,6 +8,8 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { TagPicker } from "@/app/components/tag-picker";
+import { Id } from "@/convex/_generated/dataModel";
+import { DatePicker } from "@/app/components/date-picker";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
@@ -37,37 +39,39 @@ export function InitUser({ children }: { children: React.ReactNode }) {
 export function TodosAndNotes() {
   const todos = useQuery(api.items.listTodos);
   const createItem = useMutation(api.items.create);
+  const updateItem = useMutation(api.items.update);
+  const removeTag = useMutation(api.tags.removeFromItem);
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [selectedTags, setSelectedTags] = useState<Id<"tags">[]>([]);
+  const [dueDate, setDueDate] = useState<Date>(
+    new Date(Date.now() + 24 * 60 * 60 * 1000)
+  );
 
   const handleCreateTodo = async () => {
     if (!newTodoTitle.trim()) return;
     await createItem({
       title: newTodoTitle,
       note: "",
-      dueDate: Date.now() + 24 * 60 * 60 * 1000, // Tomorrow
+      dueDate: dueDate.getTime(),
       tagIds: selectedTags,
     });
     setNewTodoTitle("");
     setSelectedTags([]);
   };
 
-  // const handleCreateNote = async () => {
-  //   if (!newNoteTitle.trim()) return;
-  //   await createItem({
-  //     title: newNoteTitle,
-  //     note: newNoteContent,
-  //   });
-  //   setNewNoteTitle("");
-  //   setNewNoteContent("");
-  // };
+  const handleToggleTodo = async (todoId: Id<"items">, completed: boolean) => {
+    await updateItem({
+      _id: todoId,
+      completed,
+    });
+  };
 
-  // const handleToggleTodo = async (todoId: string, completed: boolean) => {
-  //   await updateItem({
-  //     id: todoId,
-  //     completed,
-  //   });
-  // };
+  const handleRemoveTag = async (itemId: Id<"items">, tagId: Id<"tags">) => {
+    await removeTag({
+      itemId,
+      tagId,
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -82,9 +86,9 @@ export function TodosAndNotes() {
             >
               <Checkbox
                 checked={todo.completed}
-                // onCheckedChange={(checked) =>
-                //   void handleToggleTodo(todo._id, checked as boolean)
-                // }
+                onCheckedChange={(checked) =>
+                  void handleToggleTodo(todo._id, checked as boolean)
+                }
                 className="text-[#E7A572] border-[#E7A572]"
               />
               <div className="flex-1">
@@ -98,32 +102,50 @@ export function TodosAndNotes() {
                   <Badge
                     key={tag._id}
                     variant="secondary"
-                    className="bg-[#F7E6D3] text-[#23325A]"
+                    className="bg-[#F7E6D3] text-[#23325A] flex items-center gap-1 group"
                   >
                     {tag.name}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        void handleRemoveTag(todo._id, tag._id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                    >
+                      ×
+                    </button>
                   </Badge>
                 ))}
               </div>
             </div>
           ))}
-          <div className="flex gap-2 mt-4">
-            <Input
-              value={newTodoTitle}
-              onChange={(e) => setNewTodoTitle(e.target.value)}
-              placeholder="Add new todo..."
-              className="flex-1 border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
-              onKeyDown={(e) => e.key === "Enter" && void handleCreateTodo()}
+
+          {/* Todo Creation Area */}
+          <div className="bg-white p-4 rounded-md shadow-sm space-y-3">
+            <div className="flex gap-2">
+              <Input
+                value={newTodoTitle}
+                onChange={(e) => setNewTodoTitle(e.target.value)}
+                placeholder="Add new todo..."
+                className="flex-1 border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
+                onKeyDown={(e) => e.key === "Enter" && void handleCreateTodo()}
+              />
+              <Button
+                onClick={() => void handleCreateTodo()}
+                className="bg-[#23325A] hover:bg-[#23325A]/90 text-white"
+              >
+                Add
+              </Button>
+            </div>
+            <DatePicker
+              date={dueDate}
+              onSelect={(date) => date && setDueDate(date)}
             />
-            <Button
-              onClick={() => void handleCreateTodo()}
-              className="bg-[#23325A] hover:bg-[#23325A]/90 text-white"
-            >
-              Add
-            </Button>
+            <TagPicker
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+            />
           </div>
-          <TagPicker
-            onTagsChange={setSelectedTags}
-          />
         </div>
       </section>
 

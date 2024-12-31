@@ -147,7 +147,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
-    id: v.id("items"),
+    _id: v.id("items"),
     title: v.optional(v.string()),
     note: v.optional(v.string()),
     dueDate: v.optional(v.number()),
@@ -159,7 +159,7 @@ export const update = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Unauthorized");
 
-    const item = await ctx.db.get(args.id);
+    const item = await ctx.db.get(args._id);
     if (!item) throw new Error("Item not found");
 
     // Only creator or assignee can update
@@ -173,19 +173,19 @@ export const update = mutation({
       throw new Error("Unauthorized");
     }
 
-    return await ctx.db.patch(args.id, {
+    return await ctx.db.patch(args._id, {
       ...args,
     });
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("items") },
+  args: { _id: v.id("items") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Unauthorized");
 
-    const item = await ctx.db.get(args.id);
+    const item = await ctx.db.get(args._id);
     if (!item) throw new Error("Item not found");
 
     // Only creator can delete
@@ -198,13 +198,13 @@ export const remove = mutation({
     // Delete all tag associations
     await ctx.db
       .query("itemTags")
-      .withIndex("by_item", (q) => q.eq("itemId", args.id))
+      .withIndex("by_item", (q) => q.eq("itemId", args._id))
       .collect()
       .then((itemTags) => {
         return Promise.all(itemTags.map((it) => ctx.db.delete(it._id)));
       });
 
     // Delete the item
-    await ctx.db.delete(args.id);
+    await ctx.db.delete(args._id);
   },
 });
