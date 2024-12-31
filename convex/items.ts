@@ -42,7 +42,6 @@ export const listTodos = query({
 
 export const listNotes = query({
   args: {
-    // Optional filter to exclude todos
     includeWithDueDate: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -61,7 +60,6 @@ export const listNotes = query({
       .query("items")
       .withIndex("by_creator", (q) => q.eq("creatorId", user._id));
 
-    // If we want to exclude todos, filter out items with due dates
     if (args.includeWithDueDate === false) {
       itemsQuery = itemsQuery.filter((q) =>
         q.eq(q.field("dueDate"), undefined)
@@ -70,30 +68,21 @@ export const listNotes = query({
 
     const items = await itemsQuery.collect();
 
-    // Get all tags for these items
-    const itemTags = await Promise.all(
-      items.map((item) =>
-        ctx.db
+    // Return items with their tags using the same pattern as listTodos
+    return await Promise.all(
+      items.map(async (item) => {
+        const itemTags = await ctx.db
           .query("itemTags")
           .withIndex("by_item", (q) => q.eq("itemId", item._id))
-          .collect()
-      )
-    ).then((results) => results.flat());
+          .collect();
 
-    // Get all tag details
-    const tagIds = new Set(itemTags.map((it) => it.tagId));
-    const tags = await Promise.all(
-      [...tagIds].map((tagId) => ctx.db.get(tagId))
-    ).then((tags) => tags.filter(Boolean));
+        const tags = (
+          await Promise.all(itemTags.map((it) => ctx.db.get(it.tagId)))
+        ).filter((tag) => tag !== null);
 
-    // Return items with their tags
-    return items.map((item) => ({
-      ...item,
-      tags: itemTags
-        .filter((it) => it.itemId === item._id)
-        .map((it) => tags.find((t) => t?._id === it.tagId)!)
-        .filter(Boolean),
-    }));
+        return { ...item, tags: tags.filter(Boolean) };
+      })
+    );
   },
 });
 

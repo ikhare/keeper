@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { TagPicker } from "@/app/components/tag-picker";
 import { Id } from "@/convex/_generated/dataModel";
 import { DatePicker } from "@/app/components/date-picker";
+import { Textarea } from "@/components/ui/textarea";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
@@ -46,6 +47,9 @@ export function TodosAndNotes() {
   const [dueDate, setDueDate] = useState<Date>(
     new Date(Date.now() + 24 * 60 * 60 * 1000)
   );
+  const notes = useQuery(api.items.listNotes, { includeWithDueDate: false });
+  const [newNoteTitle, setNewNoteTitle] = useState("");
+  const [newNoteContent, setNewNoteContent] = useState("");
 
   const handleCreateTodo = async () => {
     if (!newTodoTitle.trim()) return;
@@ -71,6 +75,18 @@ export function TodosAndNotes() {
       itemId,
       tagId,
     });
+  };
+
+  const handleCreateNote = async () => {
+    if (!newNoteTitle.trim()) return;
+    await createItem({
+      title: newNoteTitle,
+      note: newNoteContent,
+      tagIds: selectedTags,
+    });
+    setNewNoteTitle("");
+    setNewNoteContent("");
+    setSelectedTags([]);
   };
 
   return (
@@ -150,15 +166,15 @@ export function TodosAndNotes() {
       </section>
 
       {/* Notes Section */}
-      {/* <section className="bg-white/80 rounded-lg shadow-lg p-6 border border-[#23325A]/10">
+      <section className="bg-white/80 rounded-lg shadow-lg p-6 border border-[#23325A]/10">
         <h2 className="text-2xl font-bold mb-4 text-[#23325A]">Notes</h2>
         <div className="grid grid-cols-2 gap-4">
-          <div className="border rounded-lg p-4 bg-white shadow-sm border-[#23325A]/10">
+          <div className="bg-white p-4 rounded-md shadow-sm space-y-3">
             <Input
               value={newNoteTitle}
               onChange={(e) => setNewNoteTitle(e.target.value)}
               placeholder="Note title"
-              className="mb-2 border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
+              className="border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
             />
             <Textarea
               value={newNoteContent}
@@ -166,9 +182,13 @@ export function TodosAndNotes() {
               placeholder="Note content"
               className="min-h-[100px] border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
             />
+            <TagPicker
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+            />
             <Button
-              onClick={handleCreateNote}
-              className="mt-2 w-full bg-[#23325A] hover:bg-[#23325A]/90 text-white"
+              onClick={() => void handleCreateNote()}
+              className="w-full bg-[#23325A] hover:bg-[#23325A]/90 text-white"
             >
               Save Note
             </Button>
@@ -176,27 +196,36 @@ export function TodosAndNotes() {
           {notes?.map((note) => (
             <div
               key={note._id}
-              className="border rounded-lg p-4 bg-white shadow-sm border-[#23325A]/10 hover:border-[#E7A572] transition-colors"
+              className="bg-white p-4 rounded-md shadow-sm hover:border-[#E7A572] transition-colors border border-[#23325A]/10"
             >
               <h3 className="font-semibold mb-2 text-[#23325A]">
                 {note.title}
               </h3>
-              <p className="text-[#23325A]/70">{note.note}</p>
-              <div className="flex gap-2 mt-2">
-                {note.tags?.map((tag) => (
+              <p className="text-[#23325A]/70 mb-3">{note.note}</p>
+              <div className="flex gap-2">
+                {note.tags.map((tag) => (
                   <Badge
                     key={tag._id}
                     variant="secondary"
-                    className="bg-[#F7E6D3] text-[#23325A]"
+                    className="bg-[#F7E6D3] text-[#23325A] flex items-center gap-1 group"
                   >
                     {tag.name}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        void handleRemoveTag(note._id, tag._id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                    >
+                      ×
+                    </button>
                   </Badge>
                 ))}
               </div>
             </div>
           ))}
         </div>
-      </section> */}
+      </section>
     </div>
   );
 }
