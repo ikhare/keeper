@@ -1,89 +1,55 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, QueryCtx } from "./_generated/server";
+import { Doc } from "./_generated/dataModel";
 
-// Queries
+async function fetchTagsForItems(ctx: QueryCtx, items: Doc<"items">[]) {
+  return await Promise.all(
+    items.map(async (item) => {
+      const itemTags = await ctx.db
+        .query("itemTags")
+        .withIndex("by_item", (q) => q.eq("itemId", item._id))
+        .collect();
+
+      const tags = (
+        await Promise.all(itemTags.map((it) => ctx.db.get(it.tagId)))
+      ).filter((tag) => tag !== null);
+
+      return { ...item, tags: tags.filter(Boolean) };
+    })
+  );
+}
+
+async function getItemsForUser(ctx: QueryCtx, withDueDate: boolean) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) throw new Error("Unauthorized");
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+    .first();
+  if (!user) throw new Error("User not found");
+
+  const items = await ctx.db
+    .query("items")
+    .withIndex("by_creator", (q) => q.eq("creatorId", user._id))
+    .filter((q) =>
+      withDueDate
+        ? q.neq(q.field("dueDate"), undefined)
+        : q.eq(q.field("dueDate"), undefined)
+    )
+    .collect();
+
+  return fetchTagsForItems(ctx, items);
+}
+
 export const listTodos = query({
   args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    // Get user id from clerk id
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
-
-    // Get all items with due dates for this user
-    const todos = await ctx.db
-      .query("items")
-      .withIndex("by_creator", (q) => q.eq("creatorId", user._id))
-      .filter((q) => q.neq(q.field("dueDate"), undefined))
-      .collect();
-
-    // Return todos with their tags
-    return await Promise.all(
-      todos.map(async (todo) => {
-        const itemTags = await ctx.db
-          .query("itemTags")
-          .withIndex("by_item", (q) => q.eq("itemId", todo._id))
-          .collect();
-
-        const tags = (
-          await Promise.all(itemTags.map((it) => ctx.db.get(it.tagId)))
-        ).filter((tag) => tag !== null);
-
-        return { ...todo, tags: tags.filter(Boolean) };
-      })
-    );
-  },
+  handler: async (ctx) => getItemsForUser(ctx, true),
 });
 
 export const listNotes = query({
-  args: {
-    includeWithDueDate: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    // Get user id from clerk id
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
-
-    // Query base: all items for this user
-    let itemsQuery = ctx.db
-      .query("items")
-      .withIndex("by_creator", (q) => q.eq("creatorId", user._id));
-
-    if (args.includeWithDueDate === false) {
-      itemsQuery = itemsQuery.filter((q) =>
-        q.eq(q.field("dueDate"), undefined)
-      );
-    }
-
-    const items = await itemsQuery.collect();
-
-    // Return items with their tags using the same pattern as listTodos
-    return await Promise.all(
-      items.map(async (item) => {
-        const itemTags = await ctx.db
-          .query("itemTags")
-          .withIndex("by_item", (q) => q.eq("itemId", item._id))
-          .collect();
-
-        const tags = (
-          await Promise.all(itemTags.map((it) => ctx.db.get(it.tagId)))
-        ).filter((tag) => tag !== null);
-
-        return { ...item, tags: tags.filter(Boolean) };
-      })
-    );
-  },
+  args: {},
+  handler: async (ctx) => getItemsForUser(ctx, false),
 });
 
 // Mutations

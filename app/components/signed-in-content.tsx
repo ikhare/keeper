@@ -47,7 +47,7 @@ export function TodosAndNotes() {
   const [dueDate, setDueDate] = useState<Date>(
     new Date(Date.now() + 24 * 60 * 60 * 1000)
   );
-  const notes = useQuery(api.items.listNotes, { includeWithDueDate: false });
+  const notes = useQuery(api.items.listNotes);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteContent, setNewNoteContent] = useState("");
 
