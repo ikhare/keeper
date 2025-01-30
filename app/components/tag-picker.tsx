@@ -11,38 +11,42 @@ interface TagPickerProps {
   onTagsChange: (tags: Id<"tags">[]) => void;
 }
 
-export function TagPicker({ onTagsChange }: TagPickerProps) {
+interface EmblorTag extends Tag {
+  id: Id<"tags">;
+}
+
+export function TagPicker({ selectedTags, onTagsChange }: TagPickerProps) {
   const tags = useQuery(api.tags.list);
   const createTag = useMutation(api.tags.create);
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
   const [localTags, setLocalTags] = useState<Tag[]>([]);
 
-  // Handle changes from TagInput
   useEffect(() => {
-    const updateTags = async () => {
-      const tagIds = await Promise.all(
-        localTags.map(async (tag) => {
-          // Check if tag already exists in tags list
-          const existingTag = tags?.find((t) => t.name === tag.text);
-          if (existingTag) {
-            return existingTag._id;
-          }
-
-          // Create new tag if it doesn't exist
-          return await createTag({ name: tag.text });
+    if (tags && selectedTags) {
+      const initialTags = selectedTags
+        .map((id) => {
+          const tag = tags.find((t) => t._id === id);
+          return tag ? { id: tag._id, text: tag.name } : null;
         })
-      );
-      onTagsChange(tagIds);
-    };
-    void updateTags();
-  }, [localTags, createTag, onTagsChange, tags]);
+        .filter((tag): tag is EmblorTag => tag !== null);
+
+      setLocalTags(initialTags);
+    }
+  }, [tags, selectedTags]);
+
+  // Handle changes from TagInput
+  const handleTagsChange = (newTags: Tag[]) => {
+    setLocalTags(newTags);
+    const tagIds = newTags.map((tag) => tag.id as Id<"tags">);
+    onTagsChange(tagIds);
+  };
 
   return (
     <div className="w-full">
       <TagInput
         placeholder="Add tags..."
         tags={localTags}
-        setTags={setLocalTags}
+        setTags={handleTagsChange}
         activeTagIndex={activeTagIndex}
         setActiveTagIndex={setActiveTagIndex}
         enableAutocomplete={true}

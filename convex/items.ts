@@ -109,6 +109,7 @@ export const update = mutation({
     priority: v.optional(v.number()),
     assigneeId: v.optional(v.id("users")),
     completed: v.optional(v.boolean()),
+    tagIds: v.optional(v.array(v.id("tags"))),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -128,9 +129,28 @@ export const update = mutation({
       throw new Error("Unauthorized");
     }
 
-    return await ctx.db.patch(args._id, {
-      ...args,
-    });
+    // Update tags if provided
+    if (args.tagIds) {
+      // Delete existing tags
+      await ctx.db
+        .query("itemTags")
+        .withIndex("by_item", (q) => q.eq("itemId", args._id))
+        .collect()
+        .then((itemTags) =>
+          Promise.all(itemTags.map((it) => ctx.db.delete(it._id)))
+        );
+
+      // Add new tags
+      await Promise.all(
+        args.tagIds.map((tagId) =>
+          ctx.db.insert("itemTags", { itemId: args._id, tagId })
+        )
+      );
+    }
+
+    // Update item
+    const { tagIds, ...itemUpdate } = args;
+    return await ctx.db.patch(args._id, itemUpdate);
   },
 });
 
@@ -161,5 +181,32 @@ export const remove = mutation({
 
     // Delete the item
     await ctx.db.delete(args._id);
+  },
+});
+
+export const get = query({
+  args: { id: v.id("items") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const item = await ctx.db.get(args.id);
+    if (!item) throw new Error("Item not found");
+
+    // Get user to check permissions
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+    if (!user) throw new Error("User not found");
+
+    // Check if user has access to this item
+    if (item.creatorId !== user._id && item.assigneeId !== user._id) {
+      throw new Error("Unauthorized");
+    }
+
+    // Get tags for the item
+    const itemWithTags = await fetchTagsForItems(ctx, [item]);
+    return itemWithTags[0];
   },
 });

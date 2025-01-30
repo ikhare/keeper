@@ -11,6 +11,7 @@ import { TagPicker } from "@/app/components/tag-picker";
 import { Id } from "@/convex/_generated/dataModel";
 import { DatePicker } from "@/app/components/date-picker";
 import { Textarea } from "@/components/ui/textarea";
+import { useRouter } from "next/navigation";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ export function InitUser({ children }: { children: React.ReactNode }) {
 
 // Main content component for signed-in users
 export function TodosAndNotes() {
+  const router = useRouter();
   const todos = useQuery(api.items.listTodos);
   const createItem = useMutation(api.items.create);
   const updateItem = useMutation(api.items.update);
@@ -98,14 +100,16 @@ export function TodosAndNotes() {
           {todos?.map((todo) => (
             <div
               key={todo._id}
-              className="flex items-center gap-3 bg-white p-3 rounded-md shadow-sm"
+              className="flex items-center gap-3 bg-white p-3 rounded-md shadow-sm cursor-pointer hover:bg-[#F7E6D3]/50 transition-colors"
+              onClick={() => router.push(`/items/${todo._id}`)}
             >
               <Checkbox
                 checked={todo.completed}
                 onCheckedChange={(checked) =>
                   void handleToggleTodo(todo._id, checked as boolean)
                 }
-                className="text-[#E7A572] border-[#E7A572]"
+                onClick={(e) => e.stopPropagation()}
+                className="h-5 w-5 text-[#E7A572] border-[#E7A572] rounded-md cursor-pointer"
               />
               <div className="flex-1">
                 <span className="text-[#23325A]">{todo.title}</span>
@@ -196,7 +200,8 @@ export function TodosAndNotes() {
           {notes?.map((note) => (
             <div
               key={note._id}
-              className="bg-white p-4 rounded-md shadow-sm hover:border-[#E7A572] transition-colors border border-[#23325A]/10"
+              className="bg-white p-4 rounded-md shadow-sm hover:border-[#E7A572] transition-colors border border-[#23325A]/10 cursor-pointer"
+              onClick={() => router.push(`/items/${note._id}`)}
             >
               <h3 className="font-semibold mb-2 text-[#23325A]">
                 {note.title}
