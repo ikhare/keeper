@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as items from "../items.js";
+import type * as perplexity from "../perplexity.js";
 import type * as tags from "../tags.js";
 import type * as users from "../users.js";
 
@@ -27,6 +28,7 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   items: typeof items;
+  perplexity: typeof perplexity;
   tags: typeof tags;
   users: typeof users;
 }>;

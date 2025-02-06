@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { TagPicker } from "@/app/components/tag-picker";
@@ -89,6 +89,19 @@ export function TodosAndNotes() {
     setNewNoteTitle("");
     setNewNoteContent("");
     setSelectedTags([]);
+  };
+
+  const search = useAction(api.perplexity.search);
+
+  const handleSearch = async () => {
+    if (!newNoteTitle.trim()) return;
+    try {
+      const searchResult = await search({ query: newNoteTitle });
+      setNewNoteContent(searchResult);
+    } catch (error) {
+      console.error('Search failed:', error);
+      // You might want to show a toast notification here
+    }
   };
 
   return (
@@ -190,12 +203,20 @@ export function TodosAndNotes() {
               selectedTags={selectedTags}
               onTagsChange={setSelectedTags}
             />
-            <Button
-              onClick={() => void handleCreateNote()}
-              className="w-full bg-[#23325A] hover:bg-[#23325A]/90 text-white"
-            >
-              Save Note
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => void handleCreateNote()}
+                className="flex-1 bg-[#23325A] hover:bg-[#23325A]/90 text-white"
+              >
+                Save Note
+              </Button>
+              <Button
+                onClick={() => void handleSearch()}
+                className="flex-1 bg-[#E7A572] hover:bg-[#E7A572]/90 text-white"
+              >
+                Do Search
+              </Button>
+            </div>
           </div>
           {notes?.map((note) => (
             <div
