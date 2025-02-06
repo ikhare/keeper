@@ -12,6 +12,8 @@ import { Id } from "@/convex/_generated/dataModel";
 import { DatePicker } from "@/app/components/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
@@ -196,8 +198,8 @@ export function TodosAndNotes() {
             <Textarea
               value={newNoteContent}
               onChange={(e) => setNewNoteContent(e.target.value)}
-              placeholder="Note content"
-              className="min-h-[100px] border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
+              placeholder="Note content (supports markdown)"
+              className="min-h-[200px] font-mono text-sm border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572] whitespace-pre-wrap"
             />
             <TagPicker
               selectedTags={selectedTags}
@@ -227,7 +229,19 @@ export function TodosAndNotes() {
               <h3 className="font-semibold mb-2 text-[#23325A]">
                 {note.title}
               </h3>
-              <p className="text-[#23325A]/70 mb-3">{note.note}</p>
+              <div className="prose max-w-none mb-3 overflow-hidden [&>*:first-child]:mt-0">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({node, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4 first:mt-0" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-xl font-bold mt-6 mb-4 first:mt-0" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-lg font-bold mt-6 mb-4 first:mt-0" {...props} />,
+                    p: ({node, ...props}) => <p className="my-4 first:mt-0" {...props} />
+                  }}
+                >
+                  {note.note}
+                </ReactMarkdown>
+              </div>
               <div className="flex gap-2">
                 {note.tags.map((tag) => (
                   <Badge

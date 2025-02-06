@@ -11,6 +11,8 @@ import { TagPicker } from "@/app/components/tag-picker";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function ItemPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -94,14 +96,27 @@ export default function ItemPage({ params }: { params: { id: string } }) {
             <Textarea
               value={editedNote}
               onChange={(e) => setEditedNote(e.target.value)}
-              className="min-h-[200px] border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
+              placeholder="Content (supports markdown)"
+              className="min-h-[400px] font-mono text-sm border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572] whitespace-pre-wrap"
             />
             <Button onClick={() => void handleSave()}>Save</Button>
           </>
         ) : (
           <>
             <h1 className="text-2xl font-bold text-[#23325A]">{item.title}</h1>
-            <p className="text-[#23325A]/70 whitespace-pre-wrap">{item.note}</p>
+            <div className="prose max-w-none [&>*:first-child]:mt-0">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({node, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4 first:mt-0" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-xl font-bold mt-6 mb-4 first:mt-0" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-lg font-bold mt-6 mb-4 first:mt-0" {...props} />,
+                  p: ({node, ...props}) => <p className="my-4 first:mt-0" {...props} />
+                }}
+              >
+                {item.note}
+              </ReactMarkdown>
+            </div>
           </>
         )}
 

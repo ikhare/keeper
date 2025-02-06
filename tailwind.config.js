@@ -1,5 +1,55 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  plugins: [require('@tailwindcss/typography')],
+  theme: {
+    extend: {
+      typography: {
+        DEFAULT: {
+          css: {
+            color: '#23325A',
+            h1: {
+              color: '#23325A',
+              fontWeight: '700',
+              marginTop: '1.5em',
+              marginBottom: '0.75em',
+            },
+            h2: {
+              color: '#23325A',
+              fontWeight: '600',
+              marginTop: '1.5em',
+              marginBottom: '0.75em',
+            },
+            h3: {
+              color: '#23325A',
+              fontWeight: '600',
+              marginTop: '1.5em',
+              marginBottom: '0.75em',
+            },
+            h4: {
+              color: '#23325A',
+              fontWeight: '600',
+              marginTop: '1.5em',
+              marginBottom: '0.75em',
+            },
+            p: {
+              marginTop: '1em',
+              marginBottom: '1em',
+            },
+            strong: {
+              color: '#23325A',
+            },
+            a: {
+              color: '#E7A572',
+              '&:hover': {
+                color: '#E7A572',
+                opacity: 0.8,
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
