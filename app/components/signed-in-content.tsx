@@ -12,7 +12,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { DatePicker } from "@/app/components/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import { MarkdownContent } from "./markdown-content";
+import { MarkdownContent } from "@/components/ui/markdown-content";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {

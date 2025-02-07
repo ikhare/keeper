@@ -11,7 +11,7 @@ import { TagPicker } from "@/app/components/tag-picker";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MarkdownContent } from "@/app/components/markdown-content";
+import { MarkdownContent } from "@/components/ui/markdown-content";
 
 export default function ItemPage({ params }: { params: { id: string } }) {
   const router = useRouter();
