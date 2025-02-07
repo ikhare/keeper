@@ -9,7 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { TagPicker } from "@/app/components/tag-picker";
 import { Id } from "@/convex/_generated/dataModel";
-import { DatePicker } from "@/app/components/date-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { MarkdownContent } from "@/components/ui/markdown-content";

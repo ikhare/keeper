@@ -6,7 +6,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/app/components/date-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import { TagPicker } from "@/app/components/tag-picker";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
