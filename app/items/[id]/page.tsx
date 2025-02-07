@@ -11,8 +11,7 @@ import { TagPicker } from "@/app/components/tag-picker";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { MarkdownContent } from "@/app/components/markdown-content";
 
 export default function ItemPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -104,19 +103,7 @@ export default function ItemPage({ params }: { params: { id: string } }) {
         ) : (
           <>
             <h1 className="text-2xl font-bold text-[#23325A]">{item.title}</h1>
-            <div className="prose max-w-none [&>*:first-child]:mt-0">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h1: ({node, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4 first:mt-0" {...props} />,
-                  h2: ({node, ...props}) => <h2 className="text-xl font-bold mt-6 mb-4 first:mt-0" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="text-lg font-bold mt-6 mb-4 first:mt-0" {...props} />,
-                  p: ({node, ...props}) => <p className="my-4 first:mt-0" {...props} />
-                }}
-              >
-                {item.note}
-              </ReactMarkdown>
-            </div>
+            <MarkdownContent content={item.note} />
           </>
         )}
 
