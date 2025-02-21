@@ -1,15 +1,4 @@
 {
-  "proseWrap": "always",
-  "printWidth": 80,
-  "overrides": [
-    {
-      "files": ["*.md", "*.markdown"],
-      "options": {
-        "printWidth": 80,
-        "proseWrap": "always",
-        "tabWidth": 2,
-        "useTabs": false
-      }
-    }
-  ]
+  "proseWrap": "preserve",
+  "printWidth": 80
 }
