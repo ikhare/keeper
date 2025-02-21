@@ -27,7 +27,7 @@ export const addToItem = mutation({
     const existing = await ctx.db
       .query("itemTags")
       .withIndex("by_item_and_tag", (q) =>
-        q.eq("itemId", args.itemId).eq("tagId", args.tagId)
+        q.eq("itemId", args.itemId).eq("tagId", args.tagId),
       )
       .first();
 
@@ -50,7 +50,7 @@ export const removeFromItem = mutation({
     const itemTag = await ctx.db
       .query("itemTags")
       .withIndex("by_item_and_tag", (q) =>
-        q.eq("itemId", args.itemId).eq("tagId", args.tagId)
+        q.eq("itemId", args.itemId).eq("tagId", args.tagId),
       )
       .first();
 

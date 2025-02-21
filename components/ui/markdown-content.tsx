@@ -6,16 +6,30 @@ interface MarkdownContentProps {
   className?: string;
 }
 
-export function MarkdownContent({ content, className = "" }: MarkdownContentProps) {
+export function MarkdownContent({
+  content,
+  className = "",
+}: MarkdownContentProps) {
   return (
     <div className={`prose max-w-none [&>*:first-child]:mt-0 ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          h1: ({node, ...props}) => <h1 className="text-2xl font-bold mt-6 mb-4 first:mt-0" {...props} />,
-          h2: ({node, ...props}) => <h2 className="text-xl font-bold mt-6 mb-4 first:mt-0" {...props} />,
-          h3: ({node, ...props}) => <h3 className="text-lg font-bold mt-6 mb-4 first:mt-0" {...props} />,
-          p: ({node, ...props}) => <p className="my-4 first:mt-0" {...props} />
+          h1: ({ node, ...props }) => (
+            <h1
+              className="text-2xl font-bold mt-6 mb-4 first:mt-0"
+              {...props}
+            />
+          ),
+          h2: ({ node, ...props }) => (
+            <h2 className="text-xl font-bold mt-6 mb-4 first:mt-0" {...props} />
+          ),
+          h3: ({ node, ...props }) => (
+            <h3 className="text-lg font-bold mt-6 mb-4 first:mt-0" {...props} />
+          ),
+          p: ({ node, ...props }) => (
+            <p className="my-4 first:mt-0" {...props} />
+          ),
         }}
       >
         {content}

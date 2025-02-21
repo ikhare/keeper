@@ -37,19 +37,19 @@ export function TagPicker({ selectedTags, onTagsChange }: TagPickerProps) {
   // Handle changes from TagInput
   const handleTagsChange = async (newTags: Tag[]) => {
     setLocalTags(newTags);
-    
+
     // Create any new tags and get their Convex IDs
     const tagIds = await Promise.all(
       newTags.map(async (tag) => {
         // If the tag already has a valid Convex ID, use it
-        if (tags?.some(t => t._id === tag.id)) {
+        if (tags?.some((t) => t._id === tag.id)) {
           return tag.id as Id<"tags">;
         }
         // Otherwise create a new tag
         return await createTag({ name: tag.text });
-      })
+      }),
     );
-    
+
     onTagsChange(tagIds);
   };
 

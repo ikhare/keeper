@@ -15,7 +15,7 @@ async function fetchTagsForItems(ctx: QueryCtx, items: Doc<"items">[]) {
       ).filter((tag) => tag !== null);
 
       return { ...item, tags: tags.filter(Boolean) };
-    })
+    }),
   );
 }
 
@@ -35,7 +35,7 @@ async function getItemsForUser(ctx: QueryCtx, withDueDate: boolean) {
     .filter((q) =>
       withDueDate
         ? q.neq(q.field("dueDate"), undefined)
-        : q.eq(q.field("dueDate"), undefined)
+        : q.eq(q.field("dueDate"), undefined),
     )
     .collect();
 
@@ -91,8 +91,8 @@ export const create = mutation({
           ctx.db.insert("itemTags", {
             itemId,
             tagId,
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -137,14 +137,14 @@ export const update = mutation({
         .withIndex("by_item", (q) => q.eq("itemId", args._id))
         .collect()
         .then((itemTags) =>
-          Promise.all(itemTags.map((it) => ctx.db.delete(it._id)))
+          Promise.all(itemTags.map((it) => ctx.db.delete(it._id))),
         );
 
       // Add new tags
       await Promise.all(
         args.tagIds.map((tagId) =>
-          ctx.db.insert("itemTags", { itemId: args._id, tagId })
-        )
+          ctx.db.insert("itemTags", { itemId: args._id, tagId }),
+        ),
       );
     }
 

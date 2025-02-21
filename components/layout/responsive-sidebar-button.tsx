@@ -34,5 +34,5 @@ export const ResponsiveSidebarButton = fr<HTMLButtonElement, ButtonProps>(
         ) : null}
       </>
     );
-  }
+  },
 );

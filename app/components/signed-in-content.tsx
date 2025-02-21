@@ -48,7 +48,7 @@ export function TodosAndNotes() {
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [selectedTags, setSelectedTags] = useState<Id<"tags">[]>([]);
   const [dueDate, setDueDate] = useState<Date>(
-    new Date(Date.now() + 24 * 60 * 60 * 1000)
+    new Date(Date.now() + 24 * 60 * 60 * 1000),
   );
   const notes = useQuery(api.items.listNotes);
   const [newNoteTitle, setNewNoteTitle] = useState("");
@@ -100,7 +100,7 @@ export function TodosAndNotes() {
       const searchResult = await search({ query: newNoteTitle });
       setNewNoteContent(searchResult);
     } catch (error) {
-      console.error('Search failed:', error);
+      console.error("Search failed:", error);
       // You might want to show a toast notification here
     }
   };
@@ -228,7 +228,10 @@ export function TodosAndNotes() {
               <h3 className="font-semibold mb-2 text-[#23325A]">
                 {note.title}
               </h3>
-              <MarkdownContent content={note.note} className="mb-3 overflow-hidden" />
+              <MarkdownContent
+                content={note.note}
+                className="mb-3 overflow-hidden"
+              />
               <div className="flex gap-2">
                 {note.tags.map((tag) => (
                   <Badge
