@@ -228,11 +228,13 @@ export function TodosAndNotes() {
               <h3 className="font-semibold mb-2 text-[#23325A]">
                 {note.title}
               </h3>
-              <MarkdownContent
-                content={note.note}
-                className="mb-3 overflow-hidden"
-              />
-              <div className="flex gap-2">
+              <div className="relative">
+                <div className="max-h-[200px] overflow-hidden">
+                  <MarkdownContent content={note.note} className="mb-3" />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent" />
+              </div>
+              <div className="flex gap-2 mt-2">
                 {note.tags.map((tag) => (
                   <Badge
                     key={tag._id}
