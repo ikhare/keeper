@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, QueryCtx } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
+import { ConvexError } from "convex/values";
 
 async function fetchTagsForItems(ctx: QueryCtx, items: Doc<"items">[]) {
   return await Promise.all(
@@ -188,21 +189,27 @@ export const get = query({
   args: { id: v.id("items") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
+    if (!identity) {
+      throw new ConvexError("Unauthorized: Please sign in to access this item");
+    }
 
     const item = await ctx.db.get(args.id);
-    if (!item) throw new Error("Item not found");
+    if (!item) {
+      throw new ConvexError("Item not found");
+    }
 
     // Get user to check permissions
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      throw new ConvexError("User not found");
+    }
 
     // Check if user has access to this item
     if (item.creatorId !== user._id && item.assigneeId !== user._id) {
-      throw new Error("Unauthorized");
+      throw new ConvexError("Unauthorized: You don't have access to this item");
     }
 
     // Get tags for the item

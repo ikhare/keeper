@@ -25,8 +25,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
-export default function ItemPage({ params }: { params: { id: string } }) {
+function ItemPageContent({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { toast } = useToast();
   const item = useQuery(api.items.get, { id: params.id as Id<"items"> });
@@ -35,7 +36,6 @@ export default function ItemPage({ params }: { params: { id: string } }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(item?.title ?? "");
   const [editedNote, setEditedNote] = useState(item?.note ?? "");
-  const [isDeleted, setIsDeleted] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -45,8 +45,9 @@ export default function ItemPage({ params }: { params: { id: string } }) {
   }, [item]);
 
   const handleSave = async () => {
+    if (!item) return;
     await updateItem({
-      _id: item!._id,
+      _id: item._id,
       title: editedTitle,
       note: editedNote,
     });
@@ -54,13 +55,14 @@ export default function ItemPage({ params }: { params: { id: string } }) {
   };
 
   const handleDelete = async () => {
+    if (!item) return;
     try {
-      await deleteItem({ _id: item!._id });
-      setIsDeleted(true);
+      await deleteItem({ _id: item._id });
       toast({
         title: "Item deleted",
         description: "The item has been successfully deleted.",
       });
+      router.push("/");
     } catch (error) {
       toast({
         title: "Error",
@@ -71,16 +73,19 @@ export default function ItemPage({ params }: { params: { id: string } }) {
   };
 
   const handleDateChange = (date: Date | undefined) => {
-    if (date) void updateItem({ _id: item!._id, dueDate: date.getTime() });
+    if (!item || !date) return;
+    void updateItem({ _id: item._id, dueDate: date.getTime() });
   };
 
   const handleCompletedChange = (checked: boolean) => {
-    void updateItem({ _id: item!._id, completed: checked });
+    if (!item) return;
+    void updateItem({ _id: item._id, completed: checked });
   };
 
   const handleTagsChange = (tags: Id<"tags">[]) => {
+    if (!item) return;
     void updateItem({
-      _id: item!._id,
+      _id: item._id,
       tagIds: tags,
       title: undefined,
       note: undefined,
@@ -91,30 +96,12 @@ export default function ItemPage({ params }: { params: { id: string } }) {
     });
   };
 
-  // Handle deleted or non-existent item
-  if (isDeleted || item === undefined) {
-    return (
-      <div className="container max-w-4xl py-8">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <h1 className="text-2xl font-bold text-[#23325A] mb-4">
-            Item not found
-          </h1>
-          <p className="text-gray-600 mb-6">
-            This item may have been deleted or does not exist.
-          </p>
-          <Button
-            onClick={() => router.push("/")}
-            className="bg-[#23325A] text-white"
-          >
-            Return to Home
-          </Button>
-        </div>
-      </div>
-    );
+  // Handle loading and error states
+  if (item === null) {
+    throw new Error("Item not found");
   }
 
-  // Handle loading state
-  if (item === null) {
+  if (item === undefined) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#23325A]" />
@@ -232,5 +219,13 @@ export default function ItemPage({ params }: { params: { id: string } }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ItemPage(props: { params: { id: string } }) {
+  return (
+    <ErrorBoundary>
+      <ItemPageContent {...props} />
+    </ErrorBoundary>
   );
 }
