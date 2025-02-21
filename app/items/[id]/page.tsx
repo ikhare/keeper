@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
-import { TagPicker } from "@/app/components/tag-picker";
+import { TagPicker } from "@/components/tag-picker";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MarkdownContent } from "@/components/ui/markdown-content";
+import { Badge } from "@/components/ui/badge";
 
 export default function ItemPage({ params }: { params: { id: string } }) {
   const router = useRouter();

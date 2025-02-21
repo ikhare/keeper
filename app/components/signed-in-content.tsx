@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
-import { TagPicker } from "@/app/components/tag-picker";
+import { TagPicker } from "@/components/tag-picker";
 import { Id } from "@/convex/_generated/dataModel";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
