@@ -108,7 +108,7 @@ export function TodosAndNotes() {
   return (
     <div className="space-y-8">
       {/* Todos Section */}
-      <section className="bg-white/80 rounded-lg shadow-lg p-6 border border-[#23325A]/10">
+      <section>
         <h2 className="text-2xl font-bold mb-4 text-[#23325A]">Todos</h2>
         <div className="space-y-4">
           {todos?.map((todo) => (
@@ -184,9 +184,9 @@ export function TodosAndNotes() {
       </section>
 
       {/* Notes Section */}
-      <section className="bg-white/80 rounded-lg shadow-lg p-6 border border-[#23325A]/10">
+      <section>
         <h2 className="text-2xl font-bold mb-4 text-[#23325A]">Notes</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-md shadow-sm space-y-3">
             <Input
               value={newNoteTitle}

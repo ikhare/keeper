@@ -15,7 +15,7 @@ export default function Home() {
           <SignInAndSignUpButtons />
         </div>
       </StickyHeader>
-      <main className="container max-w-4xl flex flex-col gap-8 p-4 min-h-screen">
+      <main className="container flex flex-col gap-8 p-4 min-h-screen">
         <Authenticated>
           <InitUser>
             <TodosAndNotes />
