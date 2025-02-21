@@ -1,7 +1,53 @@
 import { v } from "convex/values";
 import { mutation, query, QueryCtx } from "./_generated/server";
-import { Doc } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { ConvexError } from "convex/values";
+
+// Helper function to get authenticated user
+async function getAuthenticatedUser(ctx: QueryCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new ConvexError("Unauthorized: Please sign in to access this item");
+  }
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+    .first();
+  if (!user) {
+    throw new ConvexError("User not found");
+  }
+
+  return user;
+}
+
+// Helper function to check item access
+async function checkItemAccess(
+  ctx: QueryCtx,
+  itemId: Id<"items">,
+  requireCreator = false,
+) {
+  const user = await getAuthenticatedUser(ctx);
+  const item = await ctx.db.get(itemId);
+
+  if (!item) {
+    throw new ConvexError("Item not found");
+  }
+
+  if (requireCreator && item.creatorId !== user._id) {
+    throw new ConvexError(
+      "Unauthorized: Only the creator can perform this action",
+    );
+  } else if (
+    !requireCreator &&
+    item.creatorId !== user._id &&
+    item.assigneeId !== user._id
+  ) {
+    throw new ConvexError("Unauthorized: You don't have access to this item");
+  }
+
+  return { user, item };
+}
 
 async function fetchTagsForItems(ctx: QueryCtx, items: Doc<"items">[]) {
   return await Promise.all(
@@ -21,14 +67,7 @@ async function fetchTagsForItems(ctx: QueryCtx, items: Doc<"items">[]) {
 }
 
 async function getItemsForUser(ctx: QueryCtx, withDueDate: boolean) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthorized");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-    .first();
-  if (!user) throw new Error("User not found");
+  const user = await getAuthenticatedUser(ctx);
 
   const items = await ctx.db
     .query("items")
@@ -64,15 +103,7 @@ export const create = mutation({
     tagIds: v.optional(v.array(v.id("tags"))),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    // Get user id from clerk id
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
+    const user = await getAuthenticatedUser(ctx);
 
     // Create the item
     const itemId = await ctx.db.insert("items", {
@@ -113,22 +144,8 @@ export const update = mutation({
     tagIds: v.optional(v.array(v.id("tags"))),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    const item = await ctx.db.get(args._id);
-    if (!item) throw new Error("Item not found");
-
-    // Only creator or assignee can update
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
-
-    if (item.creatorId !== user._id && item.assigneeId !== user._id) {
-      throw new Error("Unauthorized");
-    }
+    // Check access - allow both creator and assignee to update
+    await checkItemAccess(ctx, args._id);
 
     // Update tags if provided
     if (args.tagIds) {
@@ -158,18 +175,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { _id: v.id("items") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    const item = await ctx.db.get(args._id);
-    if (!item) throw new Error("Item not found");
-
-    // Only creator can delete
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user || item.creatorId !== user._id) throw new Error("Unauthorized");
+    // Check access - only creator can delete
+    await checkItemAccess(ctx, args._id, true);
 
     // Delete all tag associations
     await ctx.db
@@ -188,29 +195,8 @@ export const remove = mutation({
 export const get = query({
   args: { id: v.id("items") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError("Unauthorized: Please sign in to access this item");
-    }
-
-    const item = await ctx.db.get(args.id);
-    if (!item) {
-      throw new ConvexError("Item not found");
-    }
-
-    // Get user to check permissions
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) {
-      throw new ConvexError("User not found");
-    }
-
-    // Check if user has access to this item
-    if (item.creatorId !== user._id && item.assigneeId !== user._id) {
-      throw new ConvexError("Unauthorized: You don't have access to this item");
-    }
+    // Check access - allow both creator and assignee to view
+    const { item } = await checkItemAccess(ctx, args.id);
 
     // Get tags for the item
     const itemWithTags = await fetchTagsForItems(ctx, [item]);
