@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 export const search = action({
   args: { query: v.string() },
+  returns: v.string(),
   handler: async (ctx, args) => {
     const apiKey = process.env.PERPLEXITY_API_KEY;
     if (!apiKey) {
@@ -27,6 +28,17 @@ export const search = action({
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    let content = data.choices[0].message.content;
+    const citations = data.citations || [];
+
+    // Add formatted citations to the content if there are any
+    if (citations.length > 0) {
+      content += "\n\nReferences:\n";
+      citations.forEach((citation: string, index: number) => {
+        content += `[${index + 1}] ${citation}\n`;
+      });
+    }
+
+    return content;
   },
 });
