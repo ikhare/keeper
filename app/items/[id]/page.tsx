@@ -44,6 +44,19 @@ function ItemPageContent({ params }: { params: { id: string } }) {
     }
   }, [item]);
 
+  useEffect(() => {
+    // Redirect to home page if item is null (deleted or not accessible)
+    if (item === null) {
+      toast({
+        title: "Item not found",
+        description:
+          "This item may have been deleted or you don't have access to it.",
+        variant: "destructive",
+      });
+      router.push("/");
+    }
+  }, [item, router, toast]);
+
   const handleSave = async () => {
     if (!item) return;
     await updateItem({
@@ -96,17 +109,18 @@ function ItemPageContent({ params }: { params: { id: string } }) {
     });
   };
 
-  // Handle loading and error states
-  if (item === null) {
-    throw new Error("Item not found");
-  }
-
+  // Handle loading state
   if (item === undefined) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#23325A]" />
       </div>
     );
+  }
+
+  // Handle deleted/unauthorized case
+  if (item === null) {
+    return null; // The useEffect will handle the redirect
   }
 
   return (

@@ -195,11 +195,13 @@ export const remove = mutation({
 export const get = query({
   args: { id: v.id("items") },
   handler: async (ctx, args) => {
-    // Check access - allow both creator and assignee to view
-    const { item } = await checkItemAccess(ctx, args.id);
-
-    // Get tags for the item
-    const itemWithTags = await fetchTagsForItems(ctx, [item]);
-    return itemWithTags[0];
+    try {
+      const { item } = await checkItemAccess(ctx, args.id);
+      const itemWithTags = await fetchTagsForItems(ctx, [item]);
+      return itemWithTags[0];
+    } catch (error) {
+      if (error instanceof ConvexError) return null;
+      throw error;
+    }
   },
 });
