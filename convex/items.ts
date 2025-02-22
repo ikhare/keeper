@@ -77,6 +77,7 @@ async function getItemsForUser(ctx: QueryCtx, withDueDate: boolean) {
         ? q.neq(q.field("dueDate"), undefined)
         : q.eq(q.field("dueDate"), undefined),
     )
+    .order("desc")
     .collect();
 
   return fetchTagsForItems(ctx, items);
