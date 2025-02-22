@@ -13,6 +13,13 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { MarkdownContent } from "@/components/ui/markdown-content";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
@@ -53,6 +60,8 @@ export function TodosAndNotes() {
   const notes = useQuery(api.items.listNotes);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteContent, setNewNoteContent] = useState("");
+  const [todoDialogOpen, setTodoDialogOpen] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
 
   const handleCreateTodo = async () => {
     if (!newTodoTitle.trim()) return;
@@ -64,6 +73,7 @@ export function TodosAndNotes() {
     });
     setNewTodoTitle("");
     setSelectedTags([]);
+    setTodoDialogOpen(false);
   };
 
   const handleToggleTodo = async (todoId: Id<"items">, completed: boolean) => {
@@ -90,6 +100,7 @@ export function TodosAndNotes() {
     setNewNoteTitle("");
     setNewNoteContent("");
     setSelectedTags([]);
+    setNoteDialogOpen(false);
   };
 
   const search = useAction(api.perplexity.search);
@@ -109,7 +120,46 @@ export function TodosAndNotes() {
     <div className="space-y-8">
       {/* Todos Section */}
       <section>
-        <h2 className="text-2xl font-bold mb-4 text-[#23325A]">Todos</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-[#23325A]">Todos</h2>
+          <Dialog open={todoDialogOpen} onOpenChange={setTodoDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#23325A] hover:bg-[#23325A]/90 text-white">
+                Add Todo
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white">
+              <DialogHeader>
+                <DialogTitle>Create New Todo</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <Input
+                  value={newTodoTitle}
+                  onChange={(e) => setNewTodoTitle(e.target.value)}
+                  placeholder="Todo title..."
+                  className="border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && void handleCreateTodo()
+                  }
+                />
+                <DatePicker
+                  date={dueDate}
+                  onSelect={(date) => date && setDueDate(date)}
+                />
+                <TagPicker
+                  selectedTags={selectedTags}
+                  onTagsChange={setSelectedTags}
+                />
+                <Button
+                  onClick={() => void handleCreateTodo()}
+                  className="w-full bg-[#23325A] hover:bg-[#23325A]/90 text-white"
+                >
+                  Create Todo
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
         <div className="space-y-4">
           {todos?.map((todo) => (
             <div
@@ -153,72 +203,59 @@ export function TodosAndNotes() {
               </div>
             </div>
           ))}
-
-          {/* Todo Creation Area */}
-          <div className="bg-white p-4 rounded-md shadow-sm space-y-3">
-            <div className="flex gap-2">
-              <Input
-                value={newTodoTitle}
-                onChange={(e) => setNewTodoTitle(e.target.value)}
-                placeholder="Add new todo..."
-                className="flex-1 border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
-                onKeyDown={(e) => e.key === "Enter" && void handleCreateTodo()}
-              />
-              <Button
-                onClick={() => void handleCreateTodo()}
-                className="bg-[#23325A] hover:bg-[#23325A]/90 text-white"
-              >
-                Add
-              </Button>
-            </div>
-            <DatePicker
-              date={dueDate}
-              onSelect={(date) => date && setDueDate(date)}
-            />
-            <TagPicker
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-            />
-          </div>
         </div>
       </section>
 
       {/* Notes Section */}
       <section>
-        <h2 className="text-2xl font-bold mb-4 text-[#23325A]">Notes</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-[#23325A]">Notes</h2>
+          <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#23325A] hover:bg-[#23325A]/90 text-white">
+                Add Note
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl bg-white">
+              <DialogHeader>
+                <DialogTitle>Create New Note</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <Input
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  placeholder="Note title"
+                  className="border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
+                />
+                <Textarea
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  placeholder="Note content (supports markdown)"
+                  className="min-h-[200px] font-mono text-sm border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572] whitespace-pre-wrap"
+                />
+                <TagPicker
+                  selectedTags={selectedTags}
+                  onTagsChange={setSelectedTags}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => void handleCreateNote()}
+                    className="flex-1 bg-[#23325A] hover:bg-[#23325A]/90 text-white"
+                  >
+                    Save Note
+                  </Button>
+                  <Button
+                    onClick={() => void handleSearch()}
+                    className="flex-1 bg-[#E7A572] hover:bg-[#E7A572]/90 text-white"
+                  >
+                    Do Search
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-md shadow-sm space-y-3">
-            <Input
-              value={newNoteTitle}
-              onChange={(e) => setNewNoteTitle(e.target.value)}
-              placeholder="Note title"
-              className="border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572]"
-            />
-            <Textarea
-              value={newNoteContent}
-              onChange={(e) => setNewNoteContent(e.target.value)}
-              placeholder="Note content (supports markdown)"
-              className="min-h-[200px] font-mono text-sm border-[#23325A]/20 focus:border-[#E7A572] focus:ring-[#E7A572] whitespace-pre-wrap"
-            />
-            <TagPicker
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-            />
-            <div className="flex gap-2">
-              <Button
-                onClick={() => void handleCreateNote()}
-                className="flex-1 bg-[#23325A] hover:bg-[#23325A]/90 text-white"
-              >
-                Save Note
-              </Button>
-              <Button
-                onClick={() => void handleSearch()}
-                className="flex-1 bg-[#E7A572] hover:bg-[#E7A572]/90 text-white"
-              >
-                Do Search
-              </Button>
-            </div>
-          </div>
           {notes?.map((note) => (
             <div
               key={note._id}
