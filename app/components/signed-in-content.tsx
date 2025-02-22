@@ -285,12 +285,16 @@ export function TodosAndNotes() {
             ))}
           </AnimatePresence>
           {todosStatus === "CanLoadMore" && (
-            <Button
-              onClick={() => loadMoreTodos(5)}
-              className="w-full bg-[#23325A]/10 hover:bg-[#23325A]/20 text-[#23325A]"
-            >
-              Load More Todos
-            </Button>
+            <div className="mt-2">
+              <Button
+                onClick={() => loadMoreTodos(5)}
+                variant="outline"
+                size="sm"
+                className="text-[#23325A] hover:bg-[#23325A]/5"
+              >
+                Load More Todos
+              </Button>
+            </div>
           )}
           {todosStatus === "LoadingMore" && (
             <div className="flex justify-center py-2">
@@ -389,12 +393,16 @@ export function TodosAndNotes() {
           ))}
         </div>
         {notesStatus === "CanLoadMore" && (
-          <Button
-            onClick={() => loadMoreNotes(10)}
-            className="w-full mt-4 bg-[#23325A]/10 hover:bg-[#23325A]/20 text-[#23325A]"
-          >
-            Load More Notes
-          </Button>
+          <div className="mt-4">
+            <Button
+              onClick={() => loadMoreNotes(10)}
+              variant="outline"
+              size="sm"
+              className="text-[#23325A] hover:bg-[#23325A]/5"
+            >
+              Load More Notes
+            </Button>
+          </div>
         )}
         {notesStatus === "LoadingMore" && (
           <div className="flex justify-center py-2">
