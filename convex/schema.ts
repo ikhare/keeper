@@ -30,6 +30,12 @@ export default defineSchema({
     .index("by_due_date", ["dueDate"])
     // Compound index for filtering todos by creator and due date
     .index("by_creator_and_due_date", ["creatorId", "dueDate"])
+    // Compound index for filtering todos by creator, completed status and due date
+    .index("by_creator_due_date_completed", [
+      "creatorId",
+      "completed",
+      "dueDate",
+    ])
     // Compound index for filtering todos by assignee and due date
     .index("by_assignee_and_due_date", ["assigneeId", "dueDate"]),
 

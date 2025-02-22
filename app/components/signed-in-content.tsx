@@ -48,11 +48,17 @@ export function InitUser({ children }: { children: React.ReactNode }) {
 // Main content component for signed-in users
 export function TodosAndNotes() {
   const router = useRouter();
+  const [showCompleted, setShowCompleted] = useState(false);
+
   const {
     results: todos,
     status: todosStatus,
     loadMore: loadMoreTodos,
-  } = usePaginatedQuery(api.items.listTodos, {}, { initialNumItems: 5 });
+  } = usePaginatedQuery(
+    api.items.listTodos,
+    { showCompleted },
+    { initialNumItems: 5 },
+  );
 
   const {
     results: notes,
@@ -173,7 +179,19 @@ export function TodosAndNotes() {
       {/* Todos Section */}
       <section>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-[#23325A]">Todos</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-bold text-[#23325A]">Todos</h2>
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              className={`text-sm px-3 py-1 rounded-full transition-colors ${
+                showCompleted
+                  ? "bg-[#23325A] text-white"
+                  : "bg-[#23325A]/10 text-[#23325A]"
+              }`}
+            >
+              {showCompleted ? "Showing Completed" : "Show Completed"}
+            </button>
+          </div>
           <Dialog open={todoDialogOpen} onOpenChange={setTodoDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#23325A] hover:bg-[#23325A]/90 text-white">

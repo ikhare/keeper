@@ -70,27 +70,37 @@ async function fetchTagsForItems(ctx: QueryCtx, items: Doc<"items">[]) {
 async function getItemsForUser(
   ctx: QueryCtx,
   withDueDate: boolean,
+  showCompleted: boolean,
   paginationOpts: { numItems: number; cursor: string | null },
 ) {
   const user = await getAuthenticatedUser(ctx);
-
   const dueDatePredicate = withDueDate
     ? (q: any) => q.gt("dueDate", 0) // For todos: any non-null dueDate
     : (q: any) => q.eq("dueDate", undefined); // For notes: undefined dueDate
 
   return await ctx.db
     .query("items")
-    .withIndex("by_creator_and_due_date", (q) =>
-      dueDatePredicate(q.eq("creatorId", user._id)),
+    .withIndex("by_creator_due_date_completed", (q) =>
+      dueDatePredicate(
+        q.eq("creatorId", user._id).eq("completed", showCompleted),
+      ),
     )
     .order("desc")
     .paginate(paginationOpts);
 }
 
 export const listTodos = query({
-  args: { paginationOpts: paginationOptsValidator },
+  args: {
+    paginationOpts: paginationOptsValidator,
+    showCompleted: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
-    const results = await getItemsForUser(ctx, true, args.paginationOpts);
+    const results = await getItemsForUser(
+      ctx,
+      true,
+      args.showCompleted ?? false,
+      args.paginationOpts,
+    );
     return {
       ...results,
       page: await fetchTagsForItems(ctx, results.page),
@@ -101,7 +111,12 @@ export const listTodos = query({
 export const listNotes = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
-    const results = await getItemsForUser(ctx, false, args.paginationOpts);
+    const results = await getItemsForUser(
+      ctx,
+      false,
+      false,
+      args.paginationOpts,
+    );
     return {
       ...results,
       page: await fetchTagsForItems(ctx, results.page),
