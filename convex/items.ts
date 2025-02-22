@@ -168,7 +168,7 @@ export const update = mutation({
     }
 
     // Update item
-    const { tagIds, ...itemUpdate } = args;
+    const { tagIds: _tagIds, ...itemUpdate } = args;
     return await ctx.db.patch(args._id, itemUpdate);
   },
 });

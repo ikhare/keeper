@@ -12,7 +12,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MarkdownContent } from "@/components/ui/markdown-content";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
