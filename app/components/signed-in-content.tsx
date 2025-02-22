@@ -63,6 +63,48 @@ export function TodosAndNotes() {
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
 
+  // Add keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Ignore if we're in an input or textarea
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (event.key === "t") {
+        event.preventDefault();
+        setTodoDialogOpen(true);
+      } else if (event.key === "n") {
+        event.preventDefault();
+        setNoteDialogOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
+
+  // Reset todo fields when dialog opens
+  useEffect(() => {
+    if (todoDialogOpen) {
+      setNewTodoTitle("");
+      setSelectedTags([]);
+      setDueDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
+    }
+  }, [todoDialogOpen]);
+
+  // Reset note fields when dialog opens
+  useEffect(() => {
+    if (noteDialogOpen) {
+      setNewNoteTitle("");
+      setNewNoteContent("");
+      setSelectedTags([]);
+    }
+  }, [noteDialogOpen]);
+
   const handleCreateTodo = async () => {
     if (!newTodoTitle.trim()) return;
     await createItem({
@@ -125,7 +167,7 @@ export function TodosAndNotes() {
           <Dialog open={todoDialogOpen} onOpenChange={setTodoDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#23325A] hover:bg-[#23325A]/90 text-white">
-                Add Todo
+                Add Todo (t)
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-white">
@@ -213,7 +255,7 @@ export function TodosAndNotes() {
           <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#23325A] hover:bg-[#23325A]/90 text-white">
-                Add Note
+                Add Note (n)
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl bg-white">
