@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { AnimatePresence, motion } from "framer-motion";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
@@ -231,48 +232,58 @@ export function TodosAndNotes() {
           </Dialog>
         </div>
         <div className="space-y-4">
-          {todos?.map((todo) => (
-            <div
-              key={todo._id}
-              className="flex items-center gap-3 bg-white p-3 rounded-md shadow-sm cursor-pointer hover:bg-[#F7E6D3]/50 transition-colors"
-              onClick={() => router.push(`/items/${todo._id}`)}
-            >
-              <Checkbox
-                checked={todo.completed}
-                onCheckedChange={(checked) =>
-                  void handleToggleTodo(todo._id, checked as boolean)
-                }
-                onClick={(e) => e.stopPropagation()}
-                className="h-5 w-5 text-[#E7A572] border-[#E7A572] rounded-md cursor-pointer"
-              />
-              <div className="flex-1">
-                <span className="text-[#23325A]">{todo.title}</span>
-                <span className="ml-2 text-sm text-[#782B42]">
-                  due {new Date(todo.dueDate!).toLocaleDateString()}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                {todo.tags.map((tag) => (
-                  <Badge
-                    key={tag._id}
-                    variant="secondary"
-                    className="bg-[#F7E6D3] text-[#23325A] flex items-center gap-1 group"
-                  >
-                    {tag.name}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        void handleRemoveTag(todo._id, tag._id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+          <AnimatePresence mode="popLayout">
+            {todos?.map((todo) => (
+              <motion.div
+                key={todo._id}
+                initial={{ height: "auto", opacity: 1 }}
+                exit={{
+                  height: 0,
+                  opacity: 0,
+                  margin: 0,
+                  padding: 0,
+                  transition: { duration: 0.15 },
+                }}
+                className="flex items-center gap-3 bg-white p-3 rounded-md shadow-sm cursor-pointer border border-[#23325A]/10 hover:border-[#E7A572] transition-colors overflow-hidden"
+                onClick={() => router.push(`/items/${todo._id}`)}
+              >
+                <Checkbox
+                  checked={todo.completed}
+                  onCheckedChange={(checked) => {
+                    void handleToggleTodo(todo._id, checked as boolean);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-5 w-5 text-[#E7A572] border-[#E7A572] rounded-md cursor-pointer"
+                />
+                <div className="flex-1">
+                  <span className="text-[#23325A]">{todo.title}</span>
+                  <span className="ml-2 text-sm text-[#782B42]">
+                    due {new Date(todo.dueDate!).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {todo.tags.map((tag) => (
+                    <Badge
+                      key={tag._id}
+                      variant="secondary"
+                      className="bg-[#F7E6D3] text-[#23325A] flex items-center gap-1 group"
                     >
-                      ×
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          ))}
+                      {tag.name}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          void handleRemoveTag(todo._id, tag._id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
           {todosStatus === "CanLoadMore" && (
             <Button
               onClick={() => loadMoreTodos(5)}
