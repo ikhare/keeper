@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { ConvexError } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 
 // Helper function to get authenticated user
 async function getAuthenticatedUser(ctx: QueryCtx) {
@@ -66,31 +67,46 @@ async function fetchTagsForItems(ctx: QueryCtx, items: Doc<"items">[]) {
   );
 }
 
-async function getItemsForUser(ctx: QueryCtx, withDueDate: boolean) {
+async function getItemsForUser(
+  ctx: QueryCtx,
+  withDueDate: boolean,
+  paginationOpts: { numItems: number; cursor: string | null },
+) {
   const user = await getAuthenticatedUser(ctx);
 
-  const items = await ctx.db
+  const dueDatePredicate = withDueDate
+    ? (q: any) => q.gt("dueDate", 0) // For todos: any non-null dueDate
+    : (q: any) => q.eq("dueDate", undefined); // For notes: undefined dueDate
+
+  return await ctx.db
     .query("items")
-    .withIndex("by_creator", (q) => q.eq("creatorId", user._id))
-    .filter((q) =>
-      withDueDate
-        ? q.neq(q.field("dueDate"), undefined)
-        : q.eq(q.field("dueDate"), undefined),
+    .withIndex("by_creator_and_due_date", (q) =>
+      dueDatePredicate(q.eq("creatorId", user._id)),
     )
     .order("desc")
-    .collect();
-
-  return fetchTagsForItems(ctx, items);
+    .paginate(paginationOpts);
 }
 
 export const listTodos = query({
-  args: {},
-  handler: async (ctx) => getItemsForUser(ctx, true),
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const results = await getItemsForUser(ctx, true, args.paginationOpts);
+    return {
+      ...results,
+      page: await fetchTagsForItems(ctx, results.page),
+    };
+  },
 });
 
 export const listNotes = query({
-  args: {},
-  handler: async (ctx) => getItemsForUser(ctx, false),
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const results = await getItemsForUser(ctx, false, args.paginationOpts);
+    return {
+      ...results,
+      page: await fetchTagsForItems(ctx, results.page),
+    };
+  },
 });
 
 // Mutations

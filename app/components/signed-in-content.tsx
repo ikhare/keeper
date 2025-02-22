@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { useMutation, useQuery, useAction } from "convex/react";
+import { useMutation, useAction, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { TagPicker } from "@/components/tag-picker";
@@ -48,7 +48,18 @@ export function InitUser({ children }: { children: React.ReactNode }) {
 // Main content component for signed-in users
 export function TodosAndNotes() {
   const router = useRouter();
-  const todos = useQuery(api.items.listTodos);
+  const {
+    results: todos,
+    status: todosStatus,
+    loadMore: loadMoreTodos,
+  } = usePaginatedQuery(api.items.listTodos, {}, { initialNumItems: 5 });
+
+  const {
+    results: notes,
+    status: notesStatus,
+    loadMore: loadMoreNotes,
+  } = usePaginatedQuery(api.items.listNotes, {}, { initialNumItems: 10 });
+
   const createItem = useMutation(api.items.create);
   const updateItem = useMutation(api.items.update);
   const removeTag = useMutation(api.tags.removeFromItem);
@@ -57,7 +68,6 @@ export function TodosAndNotes() {
   const [dueDate, setDueDate] = useState<Date>(
     new Date(Date.now() + 24 * 60 * 60 * 1000),
   );
-  const notes = useQuery(api.items.listNotes);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteContent, setNewNoteContent] = useState("");
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
@@ -245,6 +255,19 @@ export function TodosAndNotes() {
               </div>
             </div>
           ))}
+          {todosStatus === "CanLoadMore" && (
+            <Button
+              onClick={() => loadMoreTodos(5)}
+              className="w-full bg-[#23325A]/10 hover:bg-[#23325A]/20 text-[#23325A]"
+            >
+              Load More Todos
+            </Button>
+          )}
+          {todosStatus === "LoadingMore" && (
+            <div className="flex justify-center py-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#23325A]" />
+            </div>
+          )}
         </div>
       </section>
 
@@ -336,6 +359,19 @@ export function TodosAndNotes() {
             </div>
           ))}
         </div>
+        {notesStatus === "CanLoadMore" && (
+          <Button
+            onClick={() => loadMoreNotes(10)}
+            className="w-full mt-4 bg-[#23325A]/10 hover:bg-[#23325A]/20 text-[#23325A]"
+          >
+            Load More Notes
+          </Button>
+        )}
+        {notesStatus === "LoadingMore" && (
+          <div className="flex justify-center py-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#23325A]" />
+          </div>
+        )}
       </section>
     </div>
   );
