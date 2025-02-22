@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { AnimatePresence, motion } from "framer-motion";
 
+const SHOW_COMPLETED_KEY = "showCompleted";
+
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
@@ -49,7 +51,19 @@ export function InitUser({ children }: { children: React.ReactNode }) {
 // Main content component for signed-in users
 export function TodosAndNotes() {
   const router = useRouter();
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(() => {
+    // Initialize from session storage if available
+    if (typeof window !== "undefined") {
+      const stored = sessionStorage.getItem(SHOW_COMPLETED_KEY);
+      return stored ? stored === "true" : false;
+    }
+    return false;
+  });
+
+  // Update session storage when showCompleted changes
+  useEffect(() => {
+    sessionStorage.setItem(SHOW_COMPLETED_KEY, showCompleted.toString());
+  }, [showCompleted]);
 
   const {
     results: todos,
