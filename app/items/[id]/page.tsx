@@ -36,6 +36,16 @@ function ItemPageContent({ params }: { params: { id: string } }) {
   const [editedTitle, setEditedTitle] = useState(item?.title ?? "");
   const [editedNote, setEditedNote] = useState(item?.note ?? "");
 
+  // Mark results as seen when the page is loaded
+  useEffect(() => {
+    if (item?.hasUnseenResults) {
+      void updateItem({
+        _id: item._id,
+        hasUnseenResults: false,
+      });
+    }
+  }, [item, updateItem]);
+
   useEffect(() => {
     if (item) {
       setEditedTitle(item.title);
@@ -132,16 +142,23 @@ function ItemPageContent({ params }: { params: { id: string } }) {
         >
           ← Back
         </Button>
-        <Button
-          onClick={() => setIsEditing(!isEditing)}
-          className="bg-[#23325A] text-white"
-        >
-          {isEditing ? "Done" : "Edit"}
-        </Button>
+        {!item.isSearching && (
+          <Button
+            onClick={() => setIsEditing(!isEditing)}
+            className="bg-[#23325A] text-white"
+          >
+            {isEditing ? "Done" : "Edit"}
+          </Button>
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
-        {isEditing ? (
+        {item.isSearching ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#23325A]" />
+            <p className="text-[#23325A] text-lg">Searching...</p>
+          </div>
+        ) : isEditing ? (
           <>
             <Input
               value={editedTitle}

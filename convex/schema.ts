@@ -23,6 +23,9 @@ export default defineSchema({
     priority: v.optional(v.number()), // 1-3 for priority levels
     assigneeId: v.optional(v.id("users")),
     completed: v.optional(v.boolean()),
+    // Search status fields
+    isSearching: v.optional(v.boolean()),
+    hasUnseenResults: v.optional(v.boolean()),
   })
     // Indexes for querying
     .index("by_creator", ["creatorId"])

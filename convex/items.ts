@@ -133,6 +133,8 @@ export const create = mutation({
     priority: v.optional(v.number()),
     assigneeId: v.optional(v.id("users")),
     tagIds: v.optional(v.array(v.id("tags"))),
+    isSearching: v.optional(v.boolean()),
+    hasUnseenResults: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx);
@@ -146,6 +148,8 @@ export const create = mutation({
       priority: args.priority,
       assigneeId: args.assigneeId,
       completed: false,
+      isSearching: args.isSearching,
+      hasUnseenResults: args.hasUnseenResults,
     });
 
     // Add tags if provided
@@ -174,6 +178,8 @@ export const update = mutation({
     assigneeId: v.optional(v.id("users")),
     completed: v.optional(v.boolean()),
     tagIds: v.optional(v.array(v.id("tags"))),
+    isSearching: v.optional(v.boolean()),
+    hasUnseenResults: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     // Check access - allow both creator and assignee to update
