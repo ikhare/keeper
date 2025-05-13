@@ -21,8 +21,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-const SHOW_COMPLETED_KEY = "showCompleted";
 
 // Wrapper component for user initialization
 export function InitUser({ children }: { children: React.ReactNode }) {
@@ -51,19 +56,7 @@ export function InitUser({ children }: { children: React.ReactNode }) {
 // Main content component for signed-in users
 export function TodosAndNotes() {
   const router = useRouter();
-  const [showCompleted, setShowCompleted] = useState(() => {
-    // Initialize from session storage if available
-    if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem(SHOW_COMPLETED_KEY);
-      return stored ? stored === "true" : false;
-    }
-    return false;
-  });
-
-  // Update session storage when showCompleted changes
-  useEffect(() => {
-    sessionStorage.setItem(SHOW_COMPLETED_KEY, showCompleted.toString());
-  }, [showCompleted]);
+  const [completedPopoverOpen, setCompletedPopoverOpen] = useState(false);
 
   const {
     results: todos,
@@ -71,8 +64,18 @@ export function TodosAndNotes() {
     loadMore: loadMoreTodos,
   } = usePaginatedQuery(
     api.items.listTodos,
-    { showCompleted },
+    { showCompleted: false },
     { initialNumItems: 5 },
+  );
+
+  const {
+    results: completedTodos,
+    status: completedTodosStatus,
+    loadMore: loadMoreCompletedTodos,
+  } = usePaginatedQuery(
+    api.items.listTodos,
+    { showCompleted: true },
+    { initialNumItems: 10 },
   );
 
   const {
@@ -223,16 +226,80 @@ export function TodosAndNotes() {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold text-[#23325A]">Todos</h2>
-            <button
-              onClick={() => setShowCompleted(!showCompleted)}
-              className={`text-sm px-3 py-1 rounded-full transition-colors ${
-                showCompleted
-                  ? "bg-[#23325A] text-white"
-                  : "bg-[#23325A]/10 text-[#23325A]"
-              }`}
-            >
-              {showCompleted ? "Showing Completed" : "Show Completed"}
-            </button>
+            <Popover open={completedPopoverOpen} onOpenChange={setCompletedPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline"
+                  className="text-sm px-3 py-1 rounded-full transition-colors bg-[#23325A]/10 text-[#23325A] hover:bg-[#23325A]/20"
+                >
+                  Show Completed
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="start">
+                <div className="p-4 border-b border-[#23325A]/10">
+                  <h3 className="font-semibold text-[#23325A]">Completed Todos</h3>
+                </div>
+                <ScrollArea className="max-h-[400px]">
+                  <div className="p-4 space-y-2">
+                    <AnimatePresence mode="popLayout">
+                      {completedTodos?.map((todo) => (
+                        <motion.div
+                          key={todo._id}
+                          initial={{ height: "auto", opacity: 1 }}
+                          exit={{
+                            height: 0,
+                            opacity: 0,
+                            margin: 0,
+                            padding: 0,
+                            transition: { duration: 0.15 },
+                          }}
+                          className="flex items-center gap-3 bg-white p-3 rounded-md shadow-sm cursor-pointer border border-[#23325A]/10 hover:border-[#E7A572] transition-colors overflow-hidden"
+                          onClick={() => {
+                            router.push(`/items/${todo._id}`);
+                            setCompletedPopoverOpen(false);
+                          }}
+                        >
+                          <Checkbox
+                            checked={todo.completed}
+                            onCheckedChange={(checked) => {
+                              void handleToggleTodo(todo._id, checked as boolean);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-5 w-5 text-[#E7A572] border-[#E7A572] rounded-md cursor-pointer"
+                          />
+                          <div className="flex-1">
+                            <span className="text-[#23325A] line-through opacity-75">{todo.title}</span>
+                            <span className="ml-2 text-sm text-[#782B42] opacity-75">
+                              due {new Date(todo.dueDate!).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    {completedTodosStatus === "CanLoadMore" && (
+                      <Button
+                        onClick={() => loadMoreCompletedTodos(5)}
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-[#23325A] hover:bg-[#23325A]/5 mt-2"
+                      >
+                        Load More
+                      </Button>
+                    )}
+                    {completedTodosStatus === "LoadingMore" && (
+                      <div className="flex justify-center py-2">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#23325A]" />
+                      </div>
+                    )}
+                    {completedTodos?.length === 0 && (
+                      <div className="py-4 text-center text-[#23325A]/50">
+                        No completed todos
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
           </div>
           <Dialog open={todoDialogOpen} onOpenChange={setTodoDialogOpen}>
             <DialogTrigger asChild>
