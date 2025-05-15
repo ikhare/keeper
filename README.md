@@ -8,3 +8,4 @@ manage both notes and todos. Built with a powerful tech stack:
 - **Clerk** - User authentication and management
 - **Tailwind** - Utility-first CSS styling
 - **shadcn/ui** - High-quality UI components
+- **Perplexity Sonar** - For inlining a search right into your notes
