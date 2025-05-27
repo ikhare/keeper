@@ -10,10 +10,11 @@ import { MarkdownContent } from "@/components/ui/markdown-content";
 
 // Create a helper type for items with tags
 import { Doc } from "@/convex/_generated/dataModel";
-type WithTags<T extends "items"> = Doc<T> & { tags: Doc<"tags">[] };
+// import { UsePaginatedQueryResult } from "convex/react"; // Removed unused import
+type WithTags<T extends "items"> = Doc<T> & { tags: (Doc<"tags"> | null)[] }; // Allow null tags
 
 interface NotesListProps {
-  notes: WithTags<"items">[] | undefined | null;
+  notes: WithTags<"items">[] | undefined | null; // Changed to array
   notesStatus: "LoadingFirstPage" | "CanLoadMore" | "Exhausted" | "LoadingMore";
   loadMoreNotes: (numItems: number) => void;
 }
@@ -40,7 +41,7 @@ export function NotesList({
   console.log("NotesList full data:", JSON.stringify(notes, null, 2));
 
   // Handle loading and empty states
-  if (notesStatus === "LoadingFirstPage") {
+  if (notesStatus === "LoadingFirstPage" && !notes) { // Check !notes
     return (
       <div className="flex justify-center py-6">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#23325A]" />
@@ -48,33 +49,39 @@ export function NotesList({
     );
   }
 
-  if (!notes || !Array.isArray(notes) || notes.length === 0) {
+  if (!notes || notes.length === 0) { // Check !notes or notes.length
     return <div className="text-center py-6 text-gray-500">No notes found</div>;
   }
 
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {Array.isArray(notes) &&
-          notes.map((note) => (
+        {notes.map((note) => { // Iterate over notes directly
+          // const note = item as any as WithTags<"items">; // No longer needed
+          const validTags = Array.isArray(note.tags)
+            ? note.tags.filter((tag): tag is Doc<"tags"> => tag !== null)
+            : [];
+          const noteWithValidTags = { ...note, tags: validTags };
+
+          return (
             <div
-              key={note._id}
+              key={noteWithValidTags._id} // Use noteWithValidTags
               className={`bg-white p-4 rounded-md shadow-sm hover:border-[#E7A572] transition-colors border cursor-pointer relative ${
-                note.hasUnseenResults
+                noteWithValidTags.hasUnseenResults // Use noteWithValidTags
                   ? "border-[#E7A572]"
                   : "border-[#23325A]/10"
               }`}
-              onClick={() => router.push(`/items/${note._id}`)}
+              onClick={() => router.push(`/items/${noteWithValidTags._id}`)} // Use noteWithValidTags
             >
-              {note.hasUnseenResults && (
+              {noteWithValidTags.hasUnseenResults && ( // Use noteWithValidTags
                 <div className="absolute top-2 right-2 bg-[#23325A]/90 text-white text-xs font-medium px-2 py-1 rounded-md shadow-sm">
                   New results available
                 </div>
               )}
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-[#23325A]">{note.title}</h3>
+                <h3 className="font-semibold text-[#23325A]">{noteWithValidTags.title}</h3> {/* Use noteWithValidTags */}
               </div>
-              {note.isSearching ? (
+              {noteWithValidTags.isSearching ? ( // Use noteWithValidTags
                 <div className="flex items-center justify-center py-8 space-x-2">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#23325A]" />
                   <span className="text-[#23325A]">Searching...</span>
@@ -83,12 +90,12 @@ export function NotesList({
                 <>
                   <div className="relative">
                     <div className="max-h-[200px] overflow-hidden">
-                      <MarkdownContent content={note.note} className="mb-3" />
+                      <MarkdownContent content={noteWithValidTags.note} className="mb-3" /> {/* Use noteWithValidTags */}
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent" />
                   </div>
                   <div className="flex gap-2 mt-2">
-                    {note.tags.map((tag) => (
+                    {noteWithValidTags.tags.map((tag) => ( // Use noteWithValidTags
                       <Badge
                         key={tag._id}
                         variant="secondary"
@@ -98,7 +105,7 @@ export function NotesList({
                         <button
                           onClick={(e) => {
                             e.preventDefault();
-                            void handleRemoveTag(note._id, tag._id);
+                            void handleRemoveTag(noteWithValidTags._id, tag._id); // Use noteWithValidTags
                           }}
                           className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
                         >
@@ -110,7 +117,8 @@ export function NotesList({
                 </>
               )}
             </div>
-          ))}
+          );
+        })}
       </div>
       {notesStatus === "CanLoadMore" && (
         <div className="mt-4">

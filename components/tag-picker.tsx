@@ -34,31 +34,67 @@ export function TagPicker({ selectedTags, onTagsChange }: TagPickerProps) {
     }
   }, [tags, selectedTags]);
 
-  // Handle changes from TagInput
-  const handleTagsChange = async (newTags: Tag[]) => {
-    setLocalTags(newTags);
+  // Synchronously update localTags state
+  const handleSetLocalTags: React.Dispatch<React.SetStateAction<Tag[]>> = (newTagsOrUpdater) => {
+    setLocalTags(newTagsOrUpdater);
+  };
 
-    // Create any new tags and get their Convex IDs
-    const tagIds = await Promise.all(
-      newTags.map(async (tag) => {
-        // If the tag already has a valid Convex ID, use it
-        if (tags?.some((t) => t._id === tag.id)) {
+  // Asynchronously process tag changes
+  useEffect(() => {
+    const processTagChangesAsync = async () => {
+      if (!tags) return; // Convex query for all tags might not be ready
+
+      // Create any new tags and get their Convex IDs
+      const newTagIdsPromises = localTags.map(async (tag) => {
+        // If the tag already has a valid Convex ID and exists in the fetched tags, use it
+        if (tag.id && tags.some((t) => t._id === tag.id)) {
           return tag.id as Id<"tags">;
+        }
+        // Check if a tag with the same text already exists
+        const existingTag = tags.find(t => t.name === tag.text);
+        if (existingTag) {
+          return existingTag._id;
         }
         // Otherwise create a new tag
         return await createTag({ name: tag.text });
-      }),
-    );
+      });
 
-    onTagsChange(tagIds);
-  };
+      const newTagIds = (await Promise.all(newTagIdsPromises)).filter(id => id !== null) as Id<"tags">[];
+
+      // Compare with selectedTags to avoid unnecessary updates
+      const sortedNewTagIds = [...newTagIds].sort();
+      const sortedSelectedTags = [...selectedTags].sort();
+
+      if (JSON.stringify(sortedNewTagIds) !== JSON.stringify(sortedSelectedTags)) {
+        onTagsChange(newTagIds);
+      }
+    };
+
+    // We need to compare localTags (Emblor's format) with selectedTags (Convex ID format)
+    // to decide if we should run the async processing.
+    // This check helps prevent running async logic if the change to localTags
+    // was triggered by selectedTags prop change that's already reflected.
+    const localTagIds = localTags.map(lt => lt.id).filter(id => id !== undefined).sort();
+    const currentSelectedIds = [...selectedTags].sort();
+    if (JSON.stringify(localTagIds) !== JSON.stringify(currentSelectedIds) || localTags.some(lt => !lt.id)) {
+      void (async () => {
+        try {
+          await processTagChangesAsync();
+        } catch (error) {
+          console.error("Failed to process tag changes:", error);
+          // Optionally, handle the error in the UI
+        }
+      })();
+    }
+
+  }, [localTags, tags, createTag, onTagsChange, selectedTags]);
 
   return (
     <div className="w-full">
       <TagInput
         placeholder="Add tags..."
         tags={localTags}
-        setTags={handleTagsChange}
+        setTags={handleSetLocalTags} // Changed to synchronous handler
         activeTagIndex={activeTagIndex}
         setActiveTagIndex={setActiveTagIndex}
         enableAutocomplete={true}
