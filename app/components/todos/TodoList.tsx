@@ -12,12 +12,9 @@ import { AnimatePresence, motion } from "framer-motion";
 // Create a helper type for items with tags
 type WithTags<T extends "items"> = Doc<T> & { tags: Doc<"tags">[] };
 
-// Import to see the shape of the data
-import { PaginationResult } from "convex/react";
-
 // Accept raw results from usePaginatedQuery
 interface TodoListProps {
-  todos: PaginationResult<WithTags<"items">[]> | undefined | null;
+  todos: WithTags<"items">[] | undefined | null;
   todosStatus: "LoadingFirstPage" | "CanLoadMore" | "Exhausted" | "LoadingMore";
   loadMoreTodos: (numItems: number) => void;
 }
