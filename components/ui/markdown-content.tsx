@@ -37,7 +37,7 @@ export function MarkdownContent({
               return <a {...props} />;
             }
             return (
-              <Link href={href}>
+              <Link href={href} legacyBehavior>
                 <a
                   className="underline text-blue-600 dark:text-blue-400"
                   {...props}
