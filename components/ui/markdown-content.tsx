@@ -1,3 +1,4 @@
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -30,6 +31,20 @@ export function MarkdownContent({
           p: ({ node, ...props }) => (
             <p className="my-4 first:mt-0" {...props} />
           ),
+          a: ({ node, href, ...props }) => {
+            if (!href) {
+              // Handle cases where href might be undefined, though less common
+              return <a {...props} />;
+            }
+            return (
+              <Link href={href} legacyBehavior>
+                <a
+                  className="underline text-blue-600 dark:text-blue-400"
+                  {...props}
+                />
+              </Link>
+            );
+          },
         }}
       >
         {content}

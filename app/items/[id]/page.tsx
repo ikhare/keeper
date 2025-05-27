@@ -242,7 +242,7 @@ function ItemPageContent({ params }: { params: { id: string } }) {
           <div>
             <h3 className="text-sm font-medium text-[#23325A] mb-2">Tags</h3>
             <TagPicker
-              selectedTags={item.tags.map((tag) => tag._id)}
+              selectedTags={item.tags.filter(tag => tag !== null).map(tag => tag!._id)}
               onTagsChange={handleTagsChange}
             />
           </div>

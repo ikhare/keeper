@@ -105,21 +105,31 @@ export function TodosAndNotes() {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold text-[#23325A]">Todos</h2>
-            <CompletedTodos 
-              completedTodos={completedTodos} 
-              completedTodosStatus={completedTodosStatus} 
+            <CompletedTodos
+              completedTodos={completedTodos.map(todo => {
+                const validTags = Array.isArray(todo.tags)
+                  ? todo.tags.filter((tag): tag is { _id: Id<"tags">; _creationTime: number; name: string; } => tag !== null)
+                  : [];
+                return { ...todo, tags: validTags };
+              })}
+              completedTodosStatus={completedTodosStatus}
               loadMoreCompletedTodos={loadMoreCompletedTodos}
             />
           </div>
-          <TodoDialog 
+          <TodoDialog
             open={todoDialogOpen} 
             onOpenChange={setTodoDialogOpen} 
           />
         </div>
-        <TodoList 
-          todos={todos} 
-          todosStatus={todosStatus} 
-          loadMoreTodos={loadMoreTodos} 
+        <TodoList
+          todos={todos.map(todo => {
+            const validTags = Array.isArray(todo.tags)
+              ? todo.tags.filter((tag): tag is { _id: Id<"tags">; _creationTime: number; name: string; } => tag !== null)
+              : [];
+            return { ...todo, tags: validTags };
+          })}
+          todosStatus={todosStatus}
+          loadMoreTodos={loadMoreTodos}
         />
       </section>
 
@@ -132,10 +142,19 @@ export function TodosAndNotes() {
             onOpenChange={setNoteDialogOpen} 
           />
         </div>
-        <NotesList 
-          notes={notes} 
-          notesStatus={notesStatus} 
-          loadMoreNotes={loadMoreNotes} 
+        <NotesList
+          notes={notes.map(note => {
+            const validTags = Array.isArray(note.tags)
+              // Filter out nulls and ensure type for remaining
+              ? note.tags.filter((tag): tag is { _id: Id<"tags">; _creationTime: number; name: string; } => tag !== null)
+              : [];
+            return {
+              ...note,
+              tags: validTags,
+            };
+          })}
+          notesStatus={notesStatus}
+          loadMoreNotes={loadMoreNotes}
         />
       </section>
     </div>
