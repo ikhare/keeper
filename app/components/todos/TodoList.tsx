@@ -10,11 +10,13 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Create a helper type for items with tags
-type WithTags<T extends "items"> = Doc<T> & { tags: Doc<"tags">[] };
+type WithTags<T extends "items"> = Doc<T> & { tags: (Doc<"tags"> | null)[] }; // Allow null tags
+
+// import { UsePaginatedQueryResult } from "convex/react"; // Removed unused import
 
 // Accept raw results from usePaginatedQuery
 interface TodoListProps {
-  todos: WithTags<"items">[] | undefined | null;
+  todos: WithTags<"items">[] | undefined | null; // Changed to array
   todosStatus: "LoadingFirstPage" | "CanLoadMore" | "Exhausted" | "LoadingMore";
   loadMoreTodos: (numItems: number) => void;
 }
@@ -48,7 +50,7 @@ export function TodoList({ todos, todosStatus, loadMoreTodos }: TodoListProps) {
   console.log("TodoList full data:", JSON.stringify(todos, null, 2));
   
   // Handle loading and empty states
-  if (todosStatus === "LoadingFirstPage") {
+  if (todosStatus === "LoadingFirstPage" && !todos) { // Check !todos
     return (
       <div className="flex justify-center py-6">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#23325A]" />
@@ -56,7 +58,7 @@ export function TodoList({ todos, todosStatus, loadMoreTodos }: TodoListProps) {
     );
   }
   
-  if (!todos || !Array.isArray(todos) || todos.length === 0) {
+  if (!todos || todos.length === 0) { // Check !todos or todos.length
     return (
       <div className="text-center py-6 text-gray-500">
         No active todos
@@ -67,9 +69,15 @@ export function TodoList({ todos, todosStatus, loadMoreTodos }: TodoListProps) {
   return (
     <div className="space-y-4">
       <AnimatePresence mode="popLayout">
-        {Array.isArray(todos) && todos.map((todo) => (
+        {todos.map((todo) => { // Iterate over todos directly
+          const validTags = Array.isArray(todo.tags)
+            ? todo.tags.filter((tag): tag is Doc<"tags"> => tag !== null)
+            : [];
+          const todoWithValidTags = { ...todo, tags: validTags };
+
+          return (
           <motion.div
-            key={todo._id}
+            key={todoWithValidTags._id} // Use todoWithValidTags
             initial={{ height: "auto", opacity: 1 }}
             exit={{
               height: 0,
@@ -79,24 +87,24 @@ export function TodoList({ todos, todosStatus, loadMoreTodos }: TodoListProps) {
               transition: { duration: 0.15 },
             }}
             className="flex items-center gap-3 bg-white p-3 rounded-md shadow-sm cursor-pointer border border-[#23325A]/10 hover:border-[#E7A572] transition-colors overflow-hidden"
-            onClick={() => router.push(`/items/${todo._id}`)}
+            onClick={() => router.push(`/items/${todoWithValidTags._id}`)} // Use todoWithValidTags
           >
             <Checkbox
-              checked={todo.completed}
+              checked={todoWithValidTags.completed} // Use todoWithValidTags
               onCheckedChange={(checked) => {
-                void handleToggleTodo(todo._id, checked as boolean);
+                void handleToggleTodo(todoWithValidTags._id, checked as boolean); // Use todoWithValidTags
               }}
               onClick={(e) => e.stopPropagation()}
               className="h-5 w-5 text-[#E7A572] border-[#E7A572] rounded-md cursor-pointer"
             />
             <div className="flex-1">
-              <span className="text-[#23325A]">{todo.title}</span>
+              <span className="text-[#23325A]">{todoWithValidTags.title}</span> {/* Use todoWithValidTags */}
               <span className="ml-2 text-sm text-[#782B42]">
-                due {new Date(todo.dueDate!).toLocaleDateString()}
+                due {new Date(todoWithValidTags.dueDate!).toLocaleDateString()} {/* Use todoWithValidTags */}
               </span>
             </div>
             <div className="flex gap-2">
-              {todo.tags.map((tag) => (
+              {todoWithValidTags.tags.map((tag) => ( // Use todoWithValidTags
                 <Badge
                   key={tag._id}
                   variant="secondary"
@@ -106,7 +114,7 @@ export function TodoList({ todos, todosStatus, loadMoreTodos }: TodoListProps) {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      void handleRemoveTag(todo._id, tag._id);
+                      void handleRemoveTag(todoWithValidTags._id, tag._id); // Use todoWithValidTags
                     }}
                     className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
                   >
@@ -116,7 +124,8 @@ export function TodoList({ todos, todosStatus, loadMoreTodos }: TodoListProps) {
               ))}
             </div>
           </motion.div>
-        ))}
+        );
+      })}
       </AnimatePresence>
       {todosStatus === "CanLoadMore" && (
         <div className="mt-2">

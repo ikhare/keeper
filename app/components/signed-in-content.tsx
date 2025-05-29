@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+// import { Id } from "@/convex/_generated/dataModel"; // Removed unused import
 import { TodoList } from "./todos/TodoList";
 import { CompletedTodos } from "./todos/CompletedTodos";
 import { TodoDialog } from "./todos/TodoDialog";
@@ -106,12 +107,7 @@ export function TodosAndNotes() {
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold text-[#23325A]">Todos</h2>
             <CompletedTodos
-              completedTodos={completedTodos.map(todo => {
-                const validTags = Array.isArray(todo.tags)
-                  ? todo.tags.filter((tag): tag is { _id: Id<"tags">; _creationTime: number; name: string; } => tag !== null)
-                  : [];
-                return { ...todo, tags: validTags };
-              })}
+              completedTodos={completedTodos}
               completedTodosStatus={completedTodosStatus}
               loadMoreCompletedTodos={loadMoreCompletedTodos}
             />
@@ -122,12 +118,7 @@ export function TodosAndNotes() {
           />
         </div>
         <TodoList
-          todos={todos.map(todo => {
-            const validTags = Array.isArray(todo.tags)
-              ? todo.tags.filter((tag): tag is { _id: Id<"tags">; _creationTime: number; name: string; } => tag !== null)
-              : [];
-            return { ...todo, tags: validTags };
-          })}
+          todos={todos}
           todosStatus={todosStatus}
           loadMoreTodos={loadMoreTodos}
         />
@@ -143,16 +134,7 @@ export function TodosAndNotes() {
           />
         </div>
         <NotesList
-          notes={notes.map(note => {
-            const validTags = Array.isArray(note.tags)
-              // Filter out nulls and ensure type for remaining
-              ? note.tags.filter((tag): tag is { _id: Id<"tags">; _creationTime: number; name: string; } => tag !== null)
-              : [];
-            return {
-              ...note,
-              tags: validTags,
-            };
-          })}
+          notes={notes}
           notesStatus={notesStatus}
           loadMoreNotes={loadMoreNotes}
         />
